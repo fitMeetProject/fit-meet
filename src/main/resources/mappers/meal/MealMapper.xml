@@ -6,25 +6,25 @@
 <mapper namespace="com.ssafy.fitmeet.domain.meal.dao.MealDao">
 
     <resultMap id="MealMap" type="com.ssafy.fitmeet.domain.meal.entity.Meal">
-        <id     property="id"           column="id"/>
-        <result property="foodCd"       column="food_cd"/>
-        <result property="foodNmKr"     column="food_nm_kr"/>
-        <result property="dbGrpCm"      column="db_grp_cm"/>
-        <result property="dbGrpNm"      column="db_grp_nm"/>
-        <result property="foodCat1Cd"   column="food_cat1_cd"/>
-        <result property="foodCat1Nm"   column="food_cat1_nm"/>
-        <result property="foodCat2Cd"   column="food_cat2_cd"/>
-        <result property="foodCat2Nm"   column="food_cat2_nm"/>
-        <result property="foodCat3Cd"   column="food_cat3_cd"/>
-        <result property="foodCat3Nm"   column="food_cat3_nm"/>
+        <id     property="id" column="id"/>
+        <result property="foodCd" column="food_cd"/>
+        <result property="foodNmKr" column="food_nm_kr"/>
+        <result property="dbGrpCm" column="db_grp_cm"/>
+        <result property="dbGrpNm" column="db_grp_nm"/>
+        <result property="foodCat1Cd" column="food_cat1_cd"/>
+        <result property="foodCat1Nm" column="food_cat1_nm"/>
+        <result property="foodCat2Cd" column="food_cat2_cd"/>
+        <result property="foodCat2Nm" column="food_cat2_nm"/>
+        <result property="foodCat3Cd" column="food_cat3_cd"/>
+        <result property="foodCat3Nm" column="food_cat3_nm"/>
         <result property="servingSizeRaw" column="serving_size_raw"/>
-        <result property="sourceType"   column="source_type"/>
-        <result property="category"     column="category"/>
-        <result property="brand"        column="brand"/>
-        <result property="tags"         column="tags"/>
-        <result property="updateDate"   column="update_date"/>
-        <result property="createdAt"    column="created_at"/>
-        <result property="updatedAt"    column="updated_at"/>
+        <result property="sourceType" column="source_type"/>
+        <result property="category" column="category"/>
+        <result property="brand" column="brand"/>
+        <result property="tags" column="tags"/>
+        <result property="updateDate" column="update_date"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <!-- INSERT -->

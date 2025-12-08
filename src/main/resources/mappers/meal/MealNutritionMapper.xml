@@ -6,18 +6,18 @@
 <mapper namespace="com.ssafy.fitmeet.domain.meal.dao.MealNutritionDao">
 
     <resultMap id="MealNutritionMap" type="com.ssafy.fitmeet.domain.meal.entity.MealNutrition">
-        <id     property="id"           column="id"/>
-        <result property="mealId"       column="meal_id"/>
-        <result property="baseAmountG"  column="base_amount_g"/>
-        <result property="kcal"         column="kcal"/>
+        <id     property="id" column="id"/>
+        <result property="mealId" column="meal_id"/>
+        <result property="baseAmountG" column="base_amount_g"/>
+        <result property="kcal" column="kcal"/>
         <result property="carbohydrate" column="carbohydrate"/>
-        <result property="protein"      column="protein"/>
-        <result property="fat"          column="fat"/>
-        <result property="sugar"        column="sugar"/>
-        <result property="sodium"       column="sodium"/>
+        <result property="protein" column="protein"/>
+        <result property="fat" column="fat"/>
+        <result property="sugar" column="sugar"/>
+        <result property="sodium" column="sodium"/>
         <result property="dietaryFiber" column="dietary_fiber"/>
-        <result property="createdAt"    column="created_at"/>
-        <result property="updatedAt"    column="updated_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <!-- INSERT -->

@@ -6,21 +6,21 @@
 <mapper namespace="com.ssafy.fitmeet.domain.diet.dao.DietInfoDao">
 
     <resultMap id="DietInfoMap" type="com.ssafy.fitmeet.domain.diet.entity.DietInfo">
-        <id     property="id"            column="id"/>
-        <result property="dietId"        column="diet_id"/>
-        <result property="mealId"        column="meal_id"/>
-        <result property="foodNmKr"      column="food_nm_kr"/>
-        <result property="foodCode"      column="food_code"/>
-        <result property="sourceType"    column="source_type"/>
-        <result property="intakeGram"    column="intake_gram"/>
-        <result property="kcal"          column="kcal"/>
-        <result property="carbohydrate"  column="carbohydrate"/>
-        <result property="protein"       column="protein"/>
-        <result property="fat"           column="fat"/>
-        <result property="sugar"         column="sugar"/>
-        <result property="sodium"        column="sodium"/>
-        <result property="dietaryFiber"  column="dietary_fiber"/>
-        <result property="createdAt"     column="created_at"/>
+        <id     property="id" column="id"/>
+        <result property="dietId" column="diet_id"/>
+        <result property="mealId" column="meal_id"/>
+        <result property="foodNmKr" column="food_nm_kr"/>
+        <result property="foodCode" column="food_code"/>
+        <result property="sourceType" column="source_type"/>
+        <result property="intakeGram" column="intake_gram"/>
+        <result property="kcal" column="kcal"/>
+        <result property="carbohydrate" column="carbohydrate"/>
+        <result property="protein" column="protein"/>
+        <result property="fat" column="fat"/>
+        <result property="sugar" column="sugar"/>
+        <result property="sodium" column="sodium"/>
+        <result property="dietaryFiber" column="dietary_fiber"/>
+        <result property="createdAt" column="created_at"/>
         <result property="updatedAt"     column="updated_at"/>
     </resultMap>
 
@@ -105,17 +105,17 @@
     <update id="update" parameterType="com.ssafy.fitmeet.domain.diet.entity.DietInfo">
         UPDATE diet_info
         SET
-            food_nm_kr     = #{foodNmKr},
-            food_code      = #{foodCode},
-            source_type    = #{sourceType},
-            intake_gram    = #{intakeGram},
-            kcal           = #{kcal},
-            carbohydrate   = #{carbohydrate},
-            protein        = #{protein},
-            fat            = #{fat},
-            sugar          = #{sugar},
-            sodium         = #{sodium},
-            dietary_fiber  = #{dietaryFiber}
+            food_nm_kr = #{foodNmKr},
+            food_code = #{foodCode},
+            source_type = #{sourceType},
+            intake_gram = #{intakeGram},
+            kcal = #{kcal},
+            carbohydrate = #{carbohydrate},
+            protein = #{protein},
+            fat = #{fat},
+            sugar = #{sugar},
+            sodium = #{sodium},
+            dietary_fiber = #{dietaryFiber}
         WHERE id = #{id}
     </update>
 

@@ -10,6 +10,7 @@ import com.ssafy.fitmeet.domain.user.entity.UserBodyInfo;
 import com.ssafy.fitmeet.global.error.CustomException;
 import com.ssafy.fitmeet.global.error.ErrorCode;
 
+import static com.ssafy.fitmeet.global.util.PasswordValidator.validate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -140,6 +141,8 @@ public class UserServiceImpl implements UserService{
         if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
             throw new CustomException(ErrorCode.AUTH_BAD_CREDENTIALS);
         }
+
+        validate(request.newPassword());
 
         String encoded = passwordEncoder.encode(request.newPassword());
         userDao.updatePassword(user.getId(), encoded, LocalDateTime.now());

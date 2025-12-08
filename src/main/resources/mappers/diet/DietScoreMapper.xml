@@ -6,11 +6,11 @@
 <mapper namespace="com.ssafy.fitmeet.domain.diet.dao.DietScoreDao">
 
     <resultMap id="DietScoreMap" type="com.ssafy.fitmeet.domain.diet.entity.DietScore">
-        <id     property="id"        column="id"/>
-        <result property="dietId"    column="diet_id"/>
-        <result property="score"     column="score"/>
-        <result property="grade"     column="grade"/>
-        <result property="feedback"  column="feedback"/>
+        <id     property="id" column="id"/>
+        <result property="dietId" column="diet_id"/>
+        <result property="score" column="score"/>
+        <result property="grade" column="grade"/>
+        <result property="feedback" column="feedback"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>

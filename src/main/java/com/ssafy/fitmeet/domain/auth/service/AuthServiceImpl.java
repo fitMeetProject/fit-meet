@@ -7,6 +7,8 @@ import com.ssafy.fitmeet.domain.user.entity.User;
 import com.ssafy.fitmeet.global.error.CustomException;
 import com.ssafy.fitmeet.global.error.ErrorCode;
 import com.ssafy.fitmeet.global.security.JwtTokenProvider;
+
+import static com.ssafy.fitmeet.global.util.PasswordValidator.validate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -40,6 +42,8 @@ public class AuthServiceImpl implements AuthService{
         if (existing != null) {
         	throw new CustomException(ErrorCode.USER_EMAIL_DUPLICATED);
         }
+
+        validate(request.password());
 
         // User 저장
         User user = User.builder()
@@ -171,5 +175,4 @@ public class AuthServiceImpl implements AuthService{
         }
         userRefreshTokenDao.deleteByUserId(user.getId());
     }
-
 }

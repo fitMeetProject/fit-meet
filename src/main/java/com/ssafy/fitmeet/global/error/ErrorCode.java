@@ -16,6 +16,13 @@ public enum ErrorCode {
     AUTH_BAD_CREDENTIALS(1004, HttpStatus.UNAUTHORIZED, "아이디 혹은 비밀번호가 틀렸습니다."),
     AUTH_INVALID_REFRESH_TOKEN(1005, HttpStatus.UNAUTHORIZED, "리프레시 토큰이 유효하지 않습니다."),
     AUTH_NON_SAVED_REFRESH_TOKEN(1006, HttpStatus.UNAUTHORIZED, "저장된 리프레시 토큰 정보가 없습니다."),
+    AUTH_INVALID_PASSWORD(1012, HttpStatus.BAD_REQUEST, "비밀번호 형식이 맞지 않습니다."),
+
+    AUTH_PASSWORD_RESET_TOKEN_INVALID(1007, HttpStatus.BAD_REQUEST, "비밀번호 재설정 토큰이 유효하지 않습니다."),
+    AUTH_PASSWORD_RESET_TOKEN_EXPIRED(1008, HttpStatus.BAD_REQUEST, "비밀번호 재설정 토큰이 만료되었습니다."),
+    AUTH_PASSWORD_RESET_TOKEN_USED(1009, HttpStatus.BAD_REQUEST, "이미 사용된 비밀번호 재설정 토큰입니다."),
+    AUTH_PASSWORD_RESET_EMAIL_NOT_FOUND(1010, HttpStatus.BAD_REQUEST, "해당 이메일을 가진 계정을 찾을 수 없습니다."),
+    AUTH_PASSWORD_RESET_FAIL(1011, HttpStatus.BAD_REQUEST, "비밀번호 재설정에 실패했습니다."),
 
     // 2000번대: 유저 관련
     USER_NOT_FOUND(2001, HttpStatus.BAD_REQUEST, "유저를 찾을 수 없습니다."),

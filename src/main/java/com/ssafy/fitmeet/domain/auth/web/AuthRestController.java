@@ -5,7 +5,6 @@ import com.ssafy.fitmeet.domain.auth.dto.AuthDto.LoginResponse;
 import com.ssafy.fitmeet.domain.auth.dto.AuthDto.SignUpRequest;
 import com.ssafy.fitmeet.domain.auth.service.AuthService;
 import com.ssafy.fitmeet.domain.user.entity.User;
-import com.ssafy.fitmeet.domain.user.service.UserService;
 import com.ssafy.fitmeet.global.config.CookieProps;
 import com.ssafy.fitmeet.global.error.CustomException;
 import com.ssafy.fitmeet.global.error.ErrorCode;
