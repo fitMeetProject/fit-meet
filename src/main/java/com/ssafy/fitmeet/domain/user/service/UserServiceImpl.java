@@ -11,11 +11,14 @@ import com.ssafy.fitmeet.global.error.CustomException;
 import com.ssafy.fitmeet.global.error.ErrorCode;
 
 import static com.ssafy.fitmeet.global.util.PasswordValidator.validate;
+
+import com.ssafy.fitmeet.global.file.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,6 +31,7 @@ public class UserServiceImpl implements UserService{
     private final UserDao userDao;
     private final UserBodyInfoDao userBodyInfoDao;
     private final PasswordEncoder passwordEncoder;
+    private final FileStorageService fileStorageService;
 
     /**
      * 현재 로그인한 유저의 email 가져오기
@@ -54,14 +58,13 @@ public class UserServiceImpl implements UserService{
      */
     @Override
     public ProfileBodyInfoResponse getProfileBody() {
-    	String email = getCurrentUserEmail();
-    	
-    	User user = getUserInfoEmail(email);
+        String email = getCurrentUserEmail();
+        User user = getUserInfoEmail(email);
         UserBodyInfo bodyInfo = findByUserId(user.getId());
-        
+
         return ProfileBodyInfoResponse.of(user, bodyInfo);
     }
-    
+
     /**
      * 신체 정보 조회
      */
@@ -200,9 +203,7 @@ public class UserServiceImpl implements UserService{
         }
 
         // 2) 활동량에 따른 활동계수 (TDEE)
-        String level = bodyInfo.getActivityLevel() != null
-                ? bodyInfo.getActivityLevel().toUpperCase()
-                : "NONE";
+        String level = bodyInfo.getActivityLevel() != null ? bodyInfo.getActivityLevel().toUpperCase() : "NONE";
 
         double activityFactor;
         switch (level) {
@@ -237,5 +238,41 @@ public class UserServiceImpl implements UserService{
         bodyInfo.setBmr((int) Math.round(bmr));
         bodyInfo.setDailyKcal((int) Math.round(tdee));
     }
+
+    @Override
+    public String getProfileImageUrl() {
+        String email = getCurrentUserEmail();
+        User user = getUserInfoEmail(email);
+        return user.getProfileImageUrl();
+    }
+
+    @Override
+    @Transactional
+    public String updateProfileImage(MultipartFile profileImage) {
+        String email = getCurrentUserEmail();
+        User user = getUserInfoEmail(email);
+
+        String newUrl = fileStorageService.storeProfileImage(user.getId(), profileImage);
+
+        fileStorageService.deleteProfileImageFile(user.getProfileImageUrl());
+
+        userDao.updateProfileImage(user.getId(), newUrl);
+        user.setProfileImageUrl(newUrl);
+
+        return newUrl;
+    }
+
+    @Override
+    @Transactional
+    public void deleteProfileImage() {
+        String email = getCurrentUserEmail();
+        User user = getUserInfoEmail(email);
+
+        fileStorageService.deleteProfileImageFile(user.getProfileImageUrl());
+
+        userDao.updateProfileImage(user.getId(), null);
+        user.setProfileImageUrl(null);
+    }
+
 
 }

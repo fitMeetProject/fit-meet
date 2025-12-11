@@ -48,4 +48,8 @@ public interface UserService {
 	 */
 	void softDelete();
 
+	// ★ 프로필 이미지 관련
+	String getProfileImageUrl(); // 조회
+	String updateProfileImage(org.springframework.web.multipart.MultipartFile profileImage); // 수정(업로드/변경)
+	void deleteProfileImage();
 }

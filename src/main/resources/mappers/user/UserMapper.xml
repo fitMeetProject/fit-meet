@@ -82,4 +82,13 @@
           AND deleted_at IS NULL
     </update>
 
+    <update id="updateProfileImage">
+        UPDATE `user`
+        SET profile_image_url = #{profileImageUrl},
+        updated_at = NOW()
+        WHERE id = #{id}
+        AND deleted_at IS NULL
+    </update>
+
+
 </mapper>

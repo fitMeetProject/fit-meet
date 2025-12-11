@@ -1,11 +1,13 @@
 package com.ssafy.fitmeet.domain.auth.service;
 
 import com.ssafy.fitmeet.domain.auth.dao.UserRefreshTokenDao;
+import com.ssafy.fitmeet.domain.auth.dto.AuthDto;
 import com.ssafy.fitmeet.domain.auth.entity.UserRefreshToken;
 import com.ssafy.fitmeet.domain.user.dao.UserDao;
 import com.ssafy.fitmeet.domain.user.entity.User;
 import com.ssafy.fitmeet.global.error.CustomException;
 import com.ssafy.fitmeet.global.error.ErrorCode;
+import com.ssafy.fitmeet.global.file.FileStorageService;
 import com.ssafy.fitmeet.global.security.JwtTokenProvider;
 
 import static com.ssafy.fitmeet.global.util.PasswordValidator.validate;
@@ -16,7 +18,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 
 import static com.ssafy.fitmeet.domain.auth.dto.AuthDto.*;
@@ -30,27 +34,25 @@ public class AuthServiceImpl implements AuthService{
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRefreshTokenDao userRefreshTokenDao;
+    private final FileStorageService fileStorageService;
 
-    /**
-     * 회원가입
-     */
     @Override
     @Transactional
-    public Long signUp(SignUpRequest request) {
+    public Long signUp(SignUpRequest request, MultipartFile profileImage) {
         // 이메일 중복 체크
-        User existing = userDao.findByEmail(request.email());
+        User existing = userDao.findByEmail(request.getEmail());
         if (existing != null) {
-        	throw new CustomException(ErrorCode.USER_EMAIL_DUPLICATED);
+            throw new CustomException(ErrorCode.USER_EMAIL_DUPLICATED);
         }
 
-        validate(request.password());
+        validate(request.getPassword());
 
-        // User 저장
+        // 1) 우선 유저 기본 정보로 insert
         User user = User.builder()
-                .email(request.email())
-                .password(passwordEncoder.encode(request.password()))
-                .name(request.name())
-                .nickname(request.nickname())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .name(request.getName())
+                .nickname(request.getNickname())
                 .status("ACTIVE")
                 .role("ROLE_USER")
                 .emailVerified(false)
@@ -58,7 +60,14 @@ public class AuthServiceImpl implements AuthService{
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        userDao.insertUser(user);
+        userDao.insertUser(user); // PK(id) 세팅됨
+
+        // 2) 프로필 이미지가 있다면 로컬 저장 후 URL 업데이트
+        if (profileImage != null && !profileImage.isEmpty()) {
+            String url = fileStorageService.storeProfileImage(user.getId(), profileImage);
+            userDao.updateProfileImage(user.getId(), url);
+        }
+
         return user.getId();
     }
 

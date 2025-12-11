@@ -1,5 +1,8 @@
 package com.ssafy.fitmeet.domain.auth.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -24,17 +27,17 @@ public class AuthDto {
     ) {}
 
     // 회원가입 요청
-    public record SignUpRequest(
-            String email,
-            String password,
-            String name,
-            String nickname,
-            Double heightCm,
-            Double weightKg,
-            Double targetWeightKg,
-            String gender,
-            LocalDate birthDate,
-            String activityLevel
-    ) {}
-    
+    @Setter
+    @Getter
+    public static class SignUpRequest {
+        private String email;
+        private String password;
+        private String name;
+        private String nickname;
+
+        public SignUpRequest() {}
+
+    }
+
+
 }

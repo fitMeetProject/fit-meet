@@ -34,6 +34,11 @@ public enum ErrorCode {
     MEAL_NOT_FOUND2(3003, HttpStatus.BAD_REQUEST, "공공데이터 영양정보를 가져올 수 없습니다."),
     DIET_FOOD_CODE_REQUIRED(3004, HttpStatus.BAD_REQUEST, "API/IMAGE 모드에서는 foodCode가 필요합니다."),
 
+    // 4000번대: 파일 업로드 관련
+    FILE_EMPTY(4001, HttpStatus.BAD_REQUEST, "업로드된 파일이 없습니다."),
+    FILE_INVALID_TYPE(4002, HttpStatus.BAD_REQUEST, "허용되지 않은 파일 형식입니다."),
+    FILE_UPLOAD_FAIL(4003, HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다."),
+    FILE_STORAGE_ERROR(4004, HttpStatus.INTERNAL_SERVER_ERROR, "파일 저장 중 오류가 발생했습니다."),
 
     // 8000번대: DB 관련
     DB_DUPLICATE_KEY(8001, HttpStatus.CONFLICT, "이미 존재하는 데이터입니다."),

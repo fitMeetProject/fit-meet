@@ -20,11 +20,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 인증 관련 API (회원가입, 로그인 등)
@@ -42,10 +44,10 @@ public class AuthRestController {
 	/**
 	 * 회원가입
 	 */
-	@PostMapping("/signup")
+	@PostMapping(value = "/signup", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
 	@Operation(summary = "회원가입", description = "이메일, 비밀번호, 기본정보 입력 회원가입")
-	public ResponseEntity<Response<?>> signUp(@RequestBody SignUpRequest request) {
-		Long userId = authService.signUp(request);
+	public ResponseEntity<Response<?>> signUp(@ModelAttribute SignUpRequest request, @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+		Long userId = authService.signUp(request, profileImage);
 		return ResponseEntity.ok(ResponseUtil.ok(userId));
 	}
 

@@ -27,4 +27,6 @@ public interface UserDao {
     // 회원 탈퇴 ( 소프트 딜리트 )
     int softDelete(@Param("id") Long id, @Param("status") String status, @Param("deletedAt") LocalDateTime deletedAt);
 
+    // 파일이미지 업로드
+    int updateProfileImage(@Param("id") Long id, @Param("profileImageUrl") String profileImageUrl);
 }

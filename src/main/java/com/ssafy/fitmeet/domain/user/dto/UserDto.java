@@ -10,7 +10,6 @@ public class UserDto {
     // 프로필 + 신체 정보 수정 요청
     public record UpdateProfileRequest(
             String nickname,
-            // 신체 정보
             Double heightCm,
             Double weightKg,
             Double targetWeightKg,
@@ -24,8 +23,8 @@ public class UserDto {
             String currentPassword,
             String newPassword
     ) {}
-    
-    // User, Body join 
+
+    // User + Body join 응답
     public record ProfileBodyInfoResponse(
             Long id,
             String email,
@@ -39,7 +38,9 @@ public class UserDto {
             Double targetWeightKg,
             String gender,
             LocalDate birthDate,
-            String activityLevel
+            String activityLevel,
+            Integer bmr,
+            Integer dailyKcal
     ) {
         public static ProfileBodyInfoResponse of(User user, UserBodyInfo body) {
             return new ProfileBodyInfoResponse(
@@ -55,9 +56,11 @@ public class UserDto {
                     body != null ? body.getTargetWeightKg() : null,
                     body != null ? body.getGender() : null,
                     body != null ? body.getBirthDate() : null,
-                    body != null ? body.getActivityLevel() : null
+                    body != null ? body.getActivityLevel() : null,
+                    body != null ? body.getBmr() : null,
+                    body != null ? body.getDailyKcal() : null
             );
         }
     }
-
 }
+
