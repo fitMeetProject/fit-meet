@@ -36,6 +36,8 @@ CREATE TABLE `user_body_info` (
                                   `gender` VARCHAR(10) NULL, -- 성별 ( MALE, FEMALE, OTHER )
                                   `birth_date` DATE NULL, -- 생년월일
                                   `activity_level` VARCHAR(20) NULL, -- 활동량 수준 ( NONE, LOW, MID, HIGH )
+                                  `bmr` INT NULL, -- 기초대사량
+                                  `daily_kcal` INT NULL, -- 하루 권장 섭취 칼로리
                                   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 정보 등록 시각
                                   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- 정보 수정 시각
                                   PRIMARY KEY (`id`),
@@ -124,7 +126,6 @@ CREATE TABLE `diet_score` (
                               CONSTRAINT `fk_diet_score_diet_id`
                                   FOREIGN KEY (`diet_id`) REFERENCES `diet`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-
 
 -- 식단 정보 테이블
 DROP TABLE IF EXISTS `diet_info`;
@@ -215,4 +216,51 @@ CREATE TABLE `meal_nutrition` (
                                   CONSTRAINT `fk_meal_nutrition_meal`
                                       FOREIGN KEY (`meal_id`) REFERENCES `meal`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+######################### 대시보드 #########################
+
+-- 유저 별 일자별 섭취 영양 요약
+DROP TABLE IF EXISTS `user_daily_nutrition`;
+CREATE TABLE `user_daily_nutrition` (
+                                        `user_id` BIGINT UNSIGNED NOT NULL, -- user.id
+                                        `date` DATE NOT NULL, -- 기준 날짜 (YYYY-MM-DD)
+
+                                        `total_kcal` DECIMAL(10,3) NOT NULL DEFAULT 0,
+                                        `total_carbohydrate` DECIMAL(10,3) NOT NULL DEFAULT 0,
+                                        `total_protein` DECIMAL(10,3) NOT NULL DEFAULT 0,
+                                        `total_fat` DECIMAL(10,3) NOT NULL DEFAULT 0,
+                                        `total_sugar` DECIMAL(10,3) NOT NULL DEFAULT 0,
+                                        `total_sodium` DECIMAL(12,3) NOT NULL DEFAULT 0,
+
+                                        `diet_score_avg` INT NULL, -- 해당 날짜 식단 점수 평균 (옵션)
+                                        `diet_score_sum` INT NULL, -- 점수 합 (옵션)
+                                        `meal_count` INT NOT NULL DEFAULT 0, -- 등록된 식단 건수
+
+                                        `created_at`     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                        `updated_at`     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+                                        PRIMARY KEY (`user_id`, `date`),
+                                        CONSTRAINT `fk_udn_user`
+                                            FOREIGN KEY (`user_id`) REFERENCES `user`(`id`)
+                                                ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- 유저 별 식단 스트릭
+DROP TABLE IF EXISTS `user_daily_activity`;
+CREATE TABLE `user_daily_activity` (
+                                       `user_id` BIGINT UNSIGNED NOT NULL, -- user.id
+                                       `date` DATE NOT NULL, -- YYYY-MM-DD (기준 날짜)
+
+                                       `diet_logged` TINYINT(1) NOT NULL DEFAULT 0, -- 식단 기록 여부
+                                       `workout_logged` TINYINT(1) NOT NULL DEFAULT 0, -- 운동 기록 여부
+                                       `challenge_done` TINYINT(1) NOT NULL DEFAULT 0, -- 챌린지 완료 여부
+
+                                       `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                       `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+                                       PRIMARY KEY (`user_id`, `date`),
+                                       CONSTRAINT `fk_uda_user`
+                                           FOREIGN KEY (`user_id`) REFERENCES `user`(`id`)
+                                               ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 

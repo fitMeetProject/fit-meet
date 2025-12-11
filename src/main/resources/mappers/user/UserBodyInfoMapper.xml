@@ -14,6 +14,8 @@
         gender,
         birth_date,
         activity_level,
+        bmr,
+        daily_kcal,
         created_at,
         updated_at
     </sql>
@@ -24,18 +26,34 @@
         WHERE user_id = #{userId}
     </select>
 
-    <insert id="insertBodyInfo" parameterType="UserBodyInfo"
-            useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertBodyInfo" parameterType="UserBodyInfo" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO user_body_info (
-            user_id, height_cm, weight_kg,
-            target_weight_kg, gender, birth_date,
-            activity_level, created_at, updated_at
+        user_id,
+        height_cm,
+        weight_kg,
+        target_weight_kg,
+        gender,
+        birth_date,
+        activity_level,
+        bmr,
+        daily_kcal,
+        created_at,
+        updated_at
         ) VALUES (
-            #{userId}, #{heightCm}, #{weightKg},
-            #{targetWeightKg}, #{gender}, #{birthDate},
-            #{activityLevel}, NOW(), NOW()
+        #{userId},
+        #{heightCm},
+        #{weightKg},
+        #{targetWeightKg},
+        #{gender},
+        #{birthDate},
+        #{activityLevel},
+        #{bmr},
+        #{dailyKcal},
+        NOW(),
+        NOW()
         )
     </insert>
+
 
     <update id="updateBodyInfo" parameterType="UserBodyInfo">
         UPDATE user_body_info
@@ -45,6 +63,8 @@
             gender = #{gender},
             birth_date = #{birthDate},
             activity_level = #{activityLevel},
+            bmr = #{bmr},
+            daily_kcal = #{dailyKcal},
             updated_at = NOW()
         WHERE user_id = #{userId}
     </update>

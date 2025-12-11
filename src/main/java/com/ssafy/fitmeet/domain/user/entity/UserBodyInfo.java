@@ -21,6 +21,8 @@ public class UserBodyInfo {
     private String gender; // MALE / FEMALE / OTHER
     private LocalDate birthDate;
     private String activityLevel; // LOW / MID / HIGH
+    private Integer bmr; // 기초대사량
+    private Integer dailyKcal; // 하루 권장 섭취 칼로리
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

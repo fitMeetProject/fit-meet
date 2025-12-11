@@ -17,7 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 
 @Service
 @RequiredArgsConstructor
@@ -79,6 +81,9 @@ public class UserServiceImpl implements UserService{
         
         UserBodyInfo bodyInfo = findByUserId(user.getId());
     	userBodyInfo.setUserId(user.getId());
+
+        // BMR / Daily Kcal 계산
+        calculateBodyMetrics(userBodyInfo);
     	
         if(bodyInfo == null) {
             userBodyInfoDao.insertBodyInfo(userBodyInfo);
@@ -114,6 +119,9 @@ public class UserServiceImpl implements UserService{
             bodyInfo.setCreatedAt(LocalDateTime.now());
             bodyInfo.setUpdatedAt(LocalDateTime.now());
 
+            // 계산
+            calculateBodyMetrics(bodyInfo);
+
             userBodyInfoDao.insertBodyInfo(bodyInfo);
         } else {
             bodyInfo.setHeightCm(request.heightCm());
@@ -123,6 +131,9 @@ public class UserServiceImpl implements UserService{
             bodyInfo.setBirthDate(request.birthDate());
             bodyInfo.setActivityLevel(request.activityLevel());
             bodyInfo.setUpdatedAt(LocalDateTime.now());
+
+            // 계산
+            calculateBodyMetrics(bodyInfo);
 
             userBodyInfoDao.updateBodyInfo(bodyInfo);
         }
@@ -159,4 +170,72 @@ public class UserServiceImpl implements UserService{
 
         userDao.softDelete(user.getId(), "WITHDRAWN", LocalDateTime.now());
     }
+
+    /**
+     * 목표 칼로리, BMR 계산 로직
+     */
+    private void calculateBodyMetrics(UserBodyInfo bodyInfo) {
+        // 필수 정보가 없으면 계산하지 않음
+        if (bodyInfo.getHeightCm() == null ||
+                bodyInfo.getWeightKg() == null ||
+                bodyInfo.getBirthDate() == null ||
+                bodyInfo.getGender() == null) {
+            return;
+        }
+
+        double height = bodyInfo.getHeightCm(); // cm
+        double weight = bodyInfo.getWeightKg(); // kg
+        LocalDate birthDate = bodyInfo.getBirthDate();
+        int age = Period.between(birthDate, LocalDate.now()).getYears();
+        String gender = bodyInfo.getGender();
+
+        // 1) BMR 계산 (Mifflin-St Jeor 공식)
+        double bmr;
+        if ("MALE".equalsIgnoreCase(gender)) {
+            bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+        } else if ("FEMALE".equalsIgnoreCase(gender)) {
+            bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+        } else {
+            bmr = 10 * weight + 6.25 * height - 5 * age;
+        }
+
+        // 2) 활동량에 따른 활동계수 (TDEE)
+        String level = bodyInfo.getActivityLevel() != null
+                ? bodyInfo.getActivityLevel().toUpperCase()
+                : "NONE";
+
+        double activityFactor;
+        switch (level) {
+            case "LOW":
+                activityFactor = 1.375; // 가벼운 활동
+                break;
+            case "MID":
+                activityFactor = 1.55;  // 보통 활동
+                break;
+            case "HIGH":
+                activityFactor = 1.725; // 격한 활동
+                break;
+            case "NONE":
+            default:
+                activityFactor = 1.2;   // 거의 활동 없음
+        }
+
+        double tdee = bmr * activityFactor;
+
+        // 3) 목표 체중에 따른 약간의 조정 (간단 버전)
+        Double targetWeight = bodyInfo.getTargetWeightKg();
+        if (targetWeight != null) {
+            if (targetWeight < weight - 0.1) {
+                // 감량 목표: 유지 칼로리에서 약간 마이너스
+                tdee -= 300;
+            } else if (targetWeight > weight + 0.1) {
+                // 증량 목표: 유지 칼로리에서 약간 플러스
+                tdee += 200;
+            }
+        }
+
+        bodyInfo.setBmr((int) Math.round(bmr));
+        bodyInfo.setDailyKcal((int) Math.round(tdee));
+    }
+
 }

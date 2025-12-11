@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.fitmeet.domain.user.dao.UserDailyActivityDao">
+
+    <resultMap id="UserDailyActivityMap" type="com.ssafy.fitmeet.domain.user.entity.UserDailyActivity">
+        <id property="userId" column="user_id"/>
+        <id property="date" column="date"/>
+        <result property="dietLogged" column="diet_logged"/>
+        <result property="workoutLogged" column="workout_logged"/>
+        <result property="challengeDone" column="challenge_done"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByUserAndDate" resultMap="UserDailyActivityMap">
+        SELECT *
+        FROM user_daily_activity
+        WHERE user_id = #{userId}
+        AND `date` = #{date}
+    </select>
+
+    <insert id="insert" parameterType="com.ssafy.fitmeet.domain.user.entity.UserDailyActivity">
+        INSERT INTO user_daily_activity (
+        user_id,
+        `date`,
+        diet_logged,
+        workout_logged,
+        challenge_done,
+        created_at,
+        updated_at
+        ) VALUES (
+        #{userId},
+        #{date},
+        #{dietLogged},
+        #{workoutLogged},
+        #{challengeDone},
+        NOW(),
+        NOW()
+        )
+    </insert>
+
+    <update id="update" parameterType="com.ssafy.fitmeet.domain.user.entity.UserDailyActivity">
+        UPDATE user_daily_activity
+        SET diet_logged    = #{dietLogged},
+        workout_logged = #{workoutLogged},
+        challenge_done = #{challengeDone},
+        updated_at     = NOW()
+        WHERE user_id = #{userId}
+        AND `date` = #{date}
+    </update>
+
+    <!-- 캘린더/스트릭용: 기간별 활동 조회 (오름차순 정렬) -->
+    <select id="findBetweenDates" resultMap="UserDailyActivityMap">
+        SELECT *
+        FROM user_daily_activity
+        WHERE user_id = #{userId}
+        AND `date` BETWEEN #{fromDate} AND #{toDate}
+        ORDER BY `date` ASC
+    </select>
+
+</mapper>

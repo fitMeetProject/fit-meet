@@ -10,6 +10,7 @@ import com.ssafy.fitmeet.domain.diet.entity.DietScore;
 import com.ssafy.fitmeet.domain.meal.entity.Meal;
 import com.ssafy.fitmeet.domain.meal.entity.MealNutrition;
 import com.ssafy.fitmeet.domain.meal.service.MealService;
+import com.ssafy.fitmeet.domain.user.service.UserDailyActivityService;
 import com.ssafy.fitmeet.global.error.CustomException;
 import com.ssafy.fitmeet.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,9 @@ public class DietServiceImpl implements DietService {
     private final DietInfoDao dietInfoDao;
     private final DietScoreDao dietScoreDao;
     private final MealService mealService;
+
+    private final UserDailyNutritionService userDailyNutritionService;
+    private final UserDailyActivityService userDailyActivityService;
 
     private BigDecimal zero(BigDecimal v) {
         return v == null ? BigDecimal.ZERO : v;
@@ -120,6 +124,13 @@ public class DietServiceImpl implements DietService {
 
         applyTotalNutritionAndUpdateDiet(diet, dietInfos);
 
+        // 하루 영양소 집계 업데이트
+        LocalDate localDate = diet.getDate().toLocalDate();
+        userDailyNutritionService.recalcDailyNutrition(userId, localDate);
+
+        // 해당 날짜 활동 기록 (식단 기록 여부)
+        userDailyActivityService.markDietLogged(userId, localDate);
+
         return diet.getId();
     }
 
@@ -206,6 +217,8 @@ public class DietServiceImpl implements DietService {
             throw new CustomException(ErrorCode.AUTH_ACCESS_DENIED);
         }
 
+
+        LocalDate oldDate = diet.getDate().toLocalDate();
         String dietSourceType = (request.sourceType() != null) ? request.sourceType() : diet.getSourceType();
 
         if (request.mealType() != null) {
@@ -242,6 +255,26 @@ public class DietServiceImpl implements DietService {
         }
 
         applyTotalNutritionAndUpdateDiet(diet, dietInfos);
+
+        LocalDate newDate = diet.getDate().toLocalDate();
+
+        // 날짜가 변경된 경우, 양쪽 날짜 모두 재계산
+        if (!oldDate.equals(newDate)) {
+            userDailyNutritionService.recalcDailyNutrition(userId, oldDate);
+        }
+
+        userDailyNutritionService.recalcDailyNutrition(userId, newDate);
+
+        if (!oldDate.equals(newDate)) {
+            // oldDate에서 해당 날짜 diet가 더 없으면 0으로
+            List<Diet> remain = dietDao.findByUserAndLocalDate(userId, oldDate);
+            if (remain == null || remain.isEmpty()) {
+                userDailyActivityService.unmarkDietLogged(userId, oldDate);
+            }
+        }
+
+        // newDate 기준으로는 무조건 1
+        userDailyActivityService.markDietLogged(userId, newDate);
     }
 
     @Override
@@ -309,7 +342,20 @@ public class DietServiceImpl implements DietService {
         if (diet == null) {
             throw new CustomException(ErrorCode.DIET_NOT_FOUND);
         }
+
+        Long userId = diet.getUserId();
+        LocalDate date = diet.getDate().toLocalDate();
+
         dietDao.softDelete(dietId);
+
+        // 하루 영양소 집계 재계산
+        userDailyNutritionService.recalcDailyNutrition(userId, date);
+
+        // 해당 날짜에 남은 diet 여부 체크 → 활동 로그도 조정
+        List<Diet> remain = dietDao.findByUserAndLocalDate(userId, date);
+        if (remain == null || remain.isEmpty()) {
+            userDailyActivityService.unmarkDietLogged(userId, date);
+        }
     }
 
     @Override

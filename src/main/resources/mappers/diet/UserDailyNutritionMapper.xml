@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.fitmeet.domain.diet.dao.UserDailyNutritionDao">
+
+    <sql id="UserDailyNutritionColumns">
+        user_id,
+        `date`,
+        total_kcal,
+        total_carbohydrate,
+        total_protein,
+        total_fat,
+        total_sugar,
+        total_sodium,
+        diet_score_avg,
+        diet_score_sum,
+        meal_count,
+        created_at,
+        updated_at
+    </sql>
+
+    <resultMap id="UserDailyNutritionMap" type="com.ssafy.fitmeet.domain.diet.entity.UserDailyNutrition">
+        <id property="userId" column="user_id"/>
+        <id property="date" column="date"/>
+        <result property="totalKcal" column="total_kcal"/>
+        <result property="totalCarbohydrate" column="total_carbohydrate"/>
+        <result property="totalProtein" column="total_protein"/>
+        <result property="totalFat" column="total_fat"/>
+        <result property="totalSugar" column="total_sugar"/>
+        <result property="totalSodium" column="total_sodium"/>
+        <result property="dietScoreAvg" column="diet_score_avg"/>
+        <result property="dietScoreSum" column="diet_score_sum"/>
+        <result property="mealCount" column="meal_count"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 단건 조회 -->
+    <select id="findByUserAndDate" resultMap="UserDailyNutritionMap">
+        SELECT
+        <include refid="UserDailyNutritionColumns"/>
+        FROM user_daily_nutrition
+        WHERE user_id = #{userId}
+        AND `date` = #{date}
+    </select>
+
+    <!-- insert -->
+    <insert id="insert" parameterType="com.ssafy.fitmeet.domain.diet.entity.UserDailyNutrition">
+        INSERT INTO user_daily_nutrition (
+        user_id,
+        `date`,
+        total_kcal,
+        total_carbohydrate,
+        total_protein,
+        total_fat,
+        total_sugar,
+        total_sodium,
+        diet_score_avg,
+        diet_score_sum,
+        meal_count,
+        created_at,
+        updated_at
+        ) VALUES (
+        #{userId},
+        #{date},
+        #{totalKcal},
+        #{totalCarbohydrate},
+        #{totalProtein},
+        #{totalFat},
+        #{totalSugar},
+        #{totalSodium},
+        #{dietScoreAvg},
+        #{dietScoreSum},
+        #{mealCount},
+        NOW(),
+        NOW()
+        )
+    </insert>
+
+    <!-- update -->
+    <update id="update" parameterType="com.ssafy.fitmeet.domain.diet.entity.UserDailyNutrition">
+        UPDATE user_daily_nutrition
+        SET total_kcal = #{totalKcal},
+        total_carbohydrate = #{totalCarbohydrate},
+        total_protein = #{totalProtein},
+        total_fat = #{totalFat},
+        total_sugar = #{totalSugar},
+        total_sodium = #{totalSodium},
+        diet_score_avg = #{dietScoreAvg},
+        diet_score_sum = #{dietScoreSum},
+        meal_count = #{mealCount},
+        updated_at = NOW()
+        WHERE user_id = #{userId}
+        AND `date` = #{date}
+    </update>
+
+    <!-- delete (해당 날짜에 diet가 하나도 없을 때) -->
+    <delete id="deleteByUserAndDate">
+        DELETE FROM user_daily_nutrition
+        WHERE user_id = #{userId}
+        AND `date` = #{date}
+    </delete>
+
+    <!-- diet + diet_score 기반 집계 쿼리 -->
+    <select id="aggregateByUserAndDate" resultType="com.ssafy.fitmeet.domain.diet.entity.UserDailyNutrition">
+        SELECT
+        d.user_id AS userId,
+        DATE(d.`date`) AS `date`,
+        SUM(d.total_kcal) AS totalKcal,
+        SUM(d.total_carbohydrate) AS totalCarbohydrate,
+        SUM(d.total_protein) AS totalProtein,
+        SUM(d.total_fat) AS totalFat,
+        SUM(d.total_sugar) AS totalSugar,
+        SUM(d.total_sodium) AS totalSodium,
+        AVG(ds.score) AS dietScoreAvg,
+        SUM(ds.score) AS dietScoreSum,
+        COUNT(d.id) AS mealCount
+        FROM diet d
+        LEFT JOIN diet_score ds
+        ON d.id = ds.diet_id
+        WHERE d.user_id = #{userId}
+        AND DATE(d.`date`) = #{date}
+        AND d.deleted_at IS NULL
+        GROUP BY d.user_id, DATE(d.`date`)
+    </select>
+
+    <!-- 기간별 조회 -->
+    <select id="findRange" resultMap="UserDailyNutritionMap">
+        SELECT
+        <include refid="UserDailyNutritionColumns"/>
+        FROM user_daily_nutrition
+        WHERE user_id = #{userId}
+        AND `date` BETWEEN #{startDate} AND #{endDate}
+        ORDER BY `date` ASC
+    </select>
+
+
+</mapper>

@@ -30,7 +30,7 @@ public class PasswordResetController {
     }
 
     @GetMapping("/validate")
-    @Operation(summary = "비밀번호 유효성 검사", description = "최소 1개 영문자, 최소 1개 숫자, 최소 1개 특수문자로 구성된 8자에서 20자 비밀번호")
+    @Operation(summary = "비밀번호 재설정 토큰 유효성", description = "비밀번호 재설정 토큰 유효성")
     public ResponseEntity<?> validate(@RequestParam String token) {
         passwordResetService.validateToken(token);
         return ResponseEntity.ok("VALID");
