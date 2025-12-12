@@ -36,27 +36,31 @@ public class FileStorageService {
             ext = original.substring(original.lastIndexOf(".")).toLowerCase();
         }
 
-        // 확장자 제한 (원하면)
         if (!ext.matches("\\.(png|jpg|jpeg|webp)$")) {
             throw new CustomException(ErrorCode.FILE_INVALID_TYPE);
         }
 
         try {
-            Path profileDir = Paths.get(uploadDir, "profile");
+            Path profileDir = Paths.get(uploadDir, "profile")
+                    .toAbsolutePath()
+                    .normalize();
+
             Files.createDirectories(profileDir);
 
             String filename = "user_" + userId + "_" + UUID.randomUUID() + ext;
             Path targetPath = profileDir.resolve(filename).normalize();
 
-            file.transferTo(targetPath.toFile());
+            Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
             return baseUrl + "/static/profile/" + filename;
+
         } catch (IOException e) {
             throw new CustomException(ErrorCode.FILE_UPLOAD_FAIL);
         } catch (Exception e) {
             throw new CustomException(ErrorCode.FILE_STORAGE_ERROR);
         }
     }
+
 
     /**
      * 기존 프로필 이미지 파일 삭제 (URL 기준)
