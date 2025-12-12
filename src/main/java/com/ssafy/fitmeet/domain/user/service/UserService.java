@@ -1,8 +1,6 @@
 package com.ssafy.fitmeet.domain.user.service;
 
-import com.ssafy.fitmeet.domain.user.dto.UserDto.ChangePasswordRequest;
-import com.ssafy.fitmeet.domain.user.dto.UserDto.ProfileBodyInfoResponse;
-import com.ssafy.fitmeet.domain.user.dto.UserDto.UpdateProfileRequest;
+import com.ssafy.fitmeet.domain.user.dto.UserDto.*;
 import com.ssafy.fitmeet.domain.user.entity.User;
 import com.ssafy.fitmeet.domain.user.entity.UserBodyInfo;
 
@@ -49,7 +47,7 @@ public interface UserService {
 	void softDelete();
 
 	// ★ 프로필 이미지 관련
-	String getProfileImageUrl(); // 조회
+	ProfileImageResponse getProfileImage(); // 조회
 	String updateProfileImage(org.springframework.web.multipart.MultipartFile profileImage); // 수정(업로드/변경)
 	void deleteProfileImage();
 }

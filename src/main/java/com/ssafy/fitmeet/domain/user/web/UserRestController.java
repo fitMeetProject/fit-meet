@@ -1,5 +1,6 @@
 package com.ssafy.fitmeet.domain.user.web;
 
+import com.ssafy.fitmeet.domain.user.dto.UserDto.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.MediaType;
@@ -53,7 +54,7 @@ public class UserRestController {
 	@GetMapping("/profile-image")
 	@Operation(summary = "프로필 이미지 조회", description = "현재 로그인 사용자 프로필 이미지 URL 조회")
 	public ResponseEntity<Response<?>> getProfileImage() {
-		String url = userService.getProfileImageUrl();
+		ProfileImageResponse url = userService.getProfileImage();
 		return ResponseEntity.ok(ResponseUtil.ok(url));
 	}
 

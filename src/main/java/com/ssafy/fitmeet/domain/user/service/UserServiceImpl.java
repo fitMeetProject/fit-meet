@@ -2,9 +2,7 @@ package com.ssafy.fitmeet.domain.user.service;
 
 import com.ssafy.fitmeet.domain.user.dao.UserBodyInfoDao;
 import com.ssafy.fitmeet.domain.user.dao.UserDao;
-import com.ssafy.fitmeet.domain.user.dto.UserDto.ChangePasswordRequest;
-import com.ssafy.fitmeet.domain.user.dto.UserDto.ProfileBodyInfoResponse;
-import com.ssafy.fitmeet.domain.user.dto.UserDto.UpdateProfileRequest;
+import com.ssafy.fitmeet.domain.user.dto.UserDto.*;
 import com.ssafy.fitmeet.domain.user.entity.User;
 import com.ssafy.fitmeet.domain.user.entity.UserBodyInfo;
 import com.ssafy.fitmeet.global.error.CustomException;
@@ -240,10 +238,10 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public String getProfileImageUrl() {
+    public ProfileImageResponse getProfileImage() {
         String email = getCurrentUserEmail();
         User user = getUserInfoEmail(email);
-        return user.getProfileImageUrl();
+        return ProfileImageResponse.of(user);
     }
 
     @Override

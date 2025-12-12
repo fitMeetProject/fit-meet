@@ -62,5 +62,17 @@ public class UserDto {
             );
         }
     }
+
+    public record ProfileImageResponse(
+            String nickname,
+            String profileImageUrl
+    ) {
+        public static ProfileImageResponse of(User user) {
+            return new ProfileImageResponse(
+                    user.getNickname(),
+                    user.getProfileImageUrl()
+            );
+        }
+    }
 }
 
