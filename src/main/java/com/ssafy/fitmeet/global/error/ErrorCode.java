@@ -28,7 +28,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(2001, HttpStatus.BAD_REQUEST, "유저를 찾을 수 없습니다."),
     USER_EMAIL_DUPLICATED(2002, HttpStatus.BAD_REQUEST, "이미 존재하는 이메일입니다."),
 
-    // 3000번대: 비즈니스 도메인
+    // 3000번대: 식단 관련
     DIET_NOT_FOUND(3001, HttpStatus.BAD_REQUEST, "식단을 찾을 수 없습니다."),
     MEAL_NOT_FOUND(3002, HttpStatus.BAD_REQUEST, "공공데이터에서 해당 식품을 찾을 수 없습니다"),
     MEAL_NOT_FOUND2(3003, HttpStatus.BAD_REQUEST, "공공데이터 영양정보를 가져올 수 없습니다."),
@@ -39,6 +39,13 @@ public enum ErrorCode {
     FILE_INVALID_TYPE(4002, HttpStatus.BAD_REQUEST, "허용되지 않은 파일 형식입니다."),
     FILE_UPLOAD_FAIL(4003, HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다."),
     FILE_STORAGE_ERROR(4004, HttpStatus.INTERNAL_SERVER_ERROR, "파일 저장 중 오류가 발생했습니다."),
+
+    // 5000번대: 커뮤니티 관련
+    POST_NOT_FOUND(5001, HttpStatus.BAD_REQUEST, "게시글을 찾을 수 없습니다."),
+    COMMENT_NOT_FOUND(5002, HttpStatus.BAD_REQUEST, "댓글을 찾을 수 없습니다."),
+    TAG_NOT_FOUND(5003, HttpStatus.BAD_REQUEST, "태그를 찾을 수 없습니다."),
+    LIKE_ALREADY_EXISTS(5004, HttpStatus.BAD_REQUEST, "이미 좋아요한 게시글입니다."),
+    LIKE_NOT_FOUND(5005, HttpStatus.BAD_REQUEST, "좋아요 정보가 없습니다."),
 
     // 8000번대: DB 관련
     DB_DUPLICATE_KEY(8001, HttpStatus.CONFLICT, "이미 존재하는 데이터입니다."),

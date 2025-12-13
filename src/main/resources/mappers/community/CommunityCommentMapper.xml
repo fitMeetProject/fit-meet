@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.fitmeet.domain.community.dao.CommunityCommentDao">
+
+    <resultMap id="CommentMap" type="com.ssafy.fitmeet.domain.community.entity.CommunityComment">
+        <id property="id" column="id"/>
+        <result property="postId" column="post_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="content" column="content"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="deletedAt" column="deleted_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 댓글 등록 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `community_comment` (
+        `post_id`, `user_id`, `content`,
+        `parent_id`, `is_deleted`,
+        `created_at`, `updated_at`
+        ) VALUES (
+        #{postId}, #{userId}, #{content},
+        #{parentId}, #{isDeleted},
+        #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <!-- 소프트 삭제 -->
+    <update id="softDelete">
+        UPDATE `community_comment`
+        SET `is_deleted` = 1,
+        `deleted_at` = NOW()
+        WHERE `id` = #{commentId}
+        AND `user_id` = #{userId}
+        AND `is_deleted` = 0
+    </update>
+
+    <!-- 특정 게시글의 댓글 목록 -->
+    <select id="findByPostId" resultMap="CommentMap">
+        SELECT *
+        FROM `community_comment`
+        WHERE `post_id` = #{postId}
+        ORDER BY `created_at` ASC
+    </select>
+
+    <!-- 단건 조회 -->
+    <select id="findById" resultMap="CommentMap">
+        SELECT *
+        FROM `community_comment`
+        WHERE `id` = #{commentId}
+    </select>
+
+
+</mapper>

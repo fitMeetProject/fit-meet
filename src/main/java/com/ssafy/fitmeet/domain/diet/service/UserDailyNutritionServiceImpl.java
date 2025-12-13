@@ -27,8 +27,7 @@ public class UserDailyNutritionServiceImpl implements UserDailyNutritionService 
     public void recalcDailyNutrition(Long userId, LocalDate date) {
 
         // 1. diet + diet_score 기반 집계 (없으면 null)
-        UserDailyNutrition aggregated =
-                userDailyNutritionDao.aggregateByUserAndDate(userId, date);
+        UserDailyNutrition aggregated = userDailyNutritionDao.aggregateByUserAndDate(userId, date);
 
         if (aggregated == null) {
             // 해당 날짜에 더 이상 식단이 없으면 요약 row 삭제
@@ -37,8 +36,7 @@ public class UserDailyNutritionServiceImpl implements UserDailyNutritionService 
         }
 
         // 2. 기존 row 있는지 확인
-        UserDailyNutrition existing =
-                userDailyNutritionDao.findByUserAndDate(userId, date);
+        UserDailyNutrition existing = userDailyNutritionDao.findByUserAndDate(userId, date);
 
         if (existing == null) {
             userDailyNutritionDao.insert(aggregated);

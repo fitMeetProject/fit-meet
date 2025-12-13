@@ -2,14 +2,14 @@ package com.ssafy.fitmeet.domain.user.service;
 
 import com.ssafy.fitmeet.domain.user.dao.UserBodyInfoDao;
 import com.ssafy.fitmeet.domain.user.dao.UserDao;
-import com.ssafy.fitmeet.domain.user.dto.UserDto.*;
+import com.ssafy.fitmeet.domain.user.dto.UserDto.ChangePasswordRequest;
+import com.ssafy.fitmeet.domain.user.dto.UserDto.ProfileBodyInfoResponse;
+import com.ssafy.fitmeet.domain.user.dto.UserDto.ProfileImageResponse;
+import com.ssafy.fitmeet.domain.user.dto.UserDto.UpdateProfileRequest;
 import com.ssafy.fitmeet.domain.user.entity.User;
 import com.ssafy.fitmeet.domain.user.entity.UserBodyInfo;
 import com.ssafy.fitmeet.global.error.CustomException;
 import com.ssafy.fitmeet.global.error.ErrorCode;
-
-import static com.ssafy.fitmeet.global.util.PasswordValidator.validate;
-
 import com.ssafy.fitmeet.global.file.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
+
+import static com.ssafy.fitmeet.global.util.PasswordValidator.validate;
 
 @Service
 @RequiredArgsConstructor
@@ -50,7 +52,19 @@ public class UserServiceImpl implements UserService{
     	if(user == null) throw new CustomException(ErrorCode.USER_NOT_FOUND);
     	return user;
     }
-    
+
+    /**
+     * ID로 사용자 조회 (커뮤니티 등에서 작성자 정보 조회용)
+     */
+    @Override
+    public User getUserById(Long userId) {
+        User user = userDao.findById(userId);
+        if (user == null) {
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
+        }
+        return user;
+    }
+
     /**
      * id 사용자 프로필 + 신체정보 조회
      */
@@ -103,8 +117,11 @@ public class UserServiceImpl implements UserService{
     	User user = getUserInfoEmail(email);
 
         // 닉네임 변경
+        user.setName(request.name());
         user.setNickname(request.nickname());
         user.setUpdatedAt(LocalDateTime.now());
+
+        userDao.updateProfileBasic(user.getId(), request.name(), request.nickname());
 
         UserBodyInfo bodyInfo = userBodyInfoDao.findByUserId(user.getId());
         if (bodyInfo == null) {

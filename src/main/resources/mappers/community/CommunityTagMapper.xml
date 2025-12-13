@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.fitmeet.domain.community.dao.CommunityTagDao">
+
+    <resultMap id="TagMap" type="com.ssafy.fitmeet.domain.community.entity.CommunityTag">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="usageCount" column="usage_count"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 태그 단건 조회 -->
+    <select id="findByName" resultMap="TagMap">
+        SELECT *
+        FROM `community_tag`
+        WHERE `name` = #{name}
+    </select>
+
+    <!-- 태그 등록 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `community_tag` (
+        `name`, `usage_count`, `created_at`, `updated_at`
+        ) VALUES (
+        #{name}, #{usageCount}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <!-- 태그 사용 횟수 증가/감소 -->
+    <update id="increaseUsageCount">
+        UPDATE `community_tag`
+        SET `usage_count` = `usage_count` + #{delta}
+        WHERE `id` = #{tagId}
+    </update>
+
+    <!-- 인기 태그 Top N -->
+    <select id="findTopTags" resultMap="TagMap">
+        SELECT *
+        FROM `community_tag`
+        ORDER BY `usage_count` DESC, `name` ASC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

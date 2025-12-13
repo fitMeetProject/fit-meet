@@ -17,6 +17,11 @@ public interface UserService {
 	User getUserInfoEmail(String email);
 
 	/**
+	 * ID로 사용자 조회 (커뮤니티 등에서 작성자 정보 조회용)
+	 */
+	User getUserById(Long userId);
+
+	/**
 	 * id 사용자 프로필 + 신체정보 조회
 	 */
 	ProfileBodyInfoResponse getProfileBody();

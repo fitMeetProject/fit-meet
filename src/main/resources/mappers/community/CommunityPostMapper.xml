@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.fitmeet.domain.community.dao.CommunityPostDao">
+
+    <resultMap id="CommunityPostMap" type="com.ssafy.fitmeet.domain.community.entity.CommunityPost">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="category" column="category"/>
+        <result property="activityDate" column="activity_date"/>
+        <result property="shareDiet" column="share_diet"/>
+        <result property="shareStreak" column="share_streak"/>
+        <result property="shareWorkout" column="share_workout"/>
+        <result property="workoutNote" column="workout_note"/>
+        <result property="workoutVideoUrl" column="workout_video_url"/>
+        <result property="likeCount" column="like_count"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="commentCount" column="comment_count"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="deletedAt" column="deleted_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.ssafy.fitmeet.domain.community.entity.CommunityPost">
+        INSERT INTO `community_post` (
+        `user_id`, `title`, `content`, `category`,
+        `activity_date`, `share_diet`, `share_streak`, `share_workout`,
+        `workout_note`, `workout_video_url`,
+        `like_count`, `view_count`, `comment_count`,
+        `is_deleted`, `created_at`, `updated_at`
+        ) VALUES (
+        #{userId}, #{title}, #{content}, #{category},
+        #{activityDate}, #{shareDiet}, #{shareStreak}, #{shareWorkout},
+        #{workoutNote}, #{workoutVideoUrl},
+        #{likeCount}, #{viewCount}, #{commentCount},
+        #{isDeleted}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <select id="findById" resultMap="CommunityPostMap">
+        SELECT *
+        FROM `community_post`
+        WHERE `id` = #{id}
+    </select>
+
+    <update id="update">
+        UPDATE `community_post`
+        SET `title` = #{title},
+        `content` = #{content},
+        `category` = #{category},
+        `activity_date` = #{activityDate},
+        `share_diet` = #{shareDiet},
+        `share_streak` = #{shareStreak},
+        `share_workout` = #{shareWorkout},
+        `workout_note` = #{workoutNote},
+        `workout_video_url` = #{workoutVideoUrl},
+        `updated_at` = #{updatedAt}
+        WHERE `id` = #{id}
+    </update>
+
+    <update id="softDelete">
+        UPDATE `community_post`
+        SET `is_deleted` = 1,
+        `deleted_at` = NOW()
+        WHERE `id` = #{postId}
+        AND `user_id` = #{userId}
+        AND `is_deleted` = 0
+    </update>
+
+    <update id="restore">
+        UPDATE `community_post`
+        SET `is_deleted` = 0,
+        `deleted_at` = NULL
+        WHERE `id` = #{postId}
+        AND `user_id` = #{userId}
+        AND `is_deleted` = 1
+    </update>
+
+    <update id="increaseViewCount">
+        UPDATE `community_post`
+        SET `view_count` = `view_count` + 1
+        WHERE `id` = #{postId}
+    </update>
+
+    <update id="updateLikeCount">
+        UPDATE `community_post`
+        SET `like_count` = `like_count` + #{delta}
+        WHERE `id` = #{postId}
+    </update>
+
+    <update id="updateCommentCount">
+        UPDATE `community_post`
+        SET `comment_count` = `comment_count` + #{delta}
+        WHERE `id` = #{postId}
+    </update>
+
+    <select id="search" resultMap="CommunityPostMap">
+        SELECT DISTINCT p.*
+        FROM `community_post` p
+        <if test="tag != null and tag != ''">
+            JOIN `community_post_tag` pt ON p.id = pt.post_id
+            JOIN `community_tag` t ON pt.tag_id = t.id
+        </if>
+        WHERE p.is_deleted = 0
+
+        <if test="keyword != null and keyword != ''">
+            AND (p.title LIKE CONCAT('%', #{keyword}, '%')
+            OR p.content LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+
+        <if test="category != null and category != ''">
+            AND p.category = #{category}
+        </if>
+
+        <if test="tag != null and tag != ''">
+            AND t.name = #{tag}
+        </if>
+
+        <choose>
+            <when test="sort == 'LATEST'">
+                ORDER BY p.created_at DESC
+            </when>
+            <when test="sort == 'OLDEST'">
+                ORDER BY p.created_at ASC
+            </when>
+            <otherwise>
+                ORDER BY p.like_count DESC,
+                p.view_count DESC,
+                p.created_at DESC
+            </otherwise>
+        </choose>
+
+        <if test="page != null and size != null">
+            LIMIT #{size} OFFSET #{page} * #{size}
+        </if>
+    </select>
+
+    <select id="findLikedPostsByUser" resultMap="CommunityPostMap">
+        SELECT p.*
+        FROM `community_post_like` l
+        JOIN `community_post` p ON l.post_id = p.id
+        WHERE l.user_id = #{userId}
+        AND p.is_deleted = 0
+        ORDER BY l.created_at DESC
+    </select>
+
+</mapper>

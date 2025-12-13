@@ -53,7 +53,19 @@
                  )
     </insert>
 
-	<!-- 마지막 로그인시간 -->
+    <!-- 프로필 기본 정보 수정 (이름 + 닉네임) -->
+    <update id="updateProfileBasic">
+        UPDATE `user`
+        SET
+        name = #{name},
+        nickname = #{nickname},
+        updated_at = NOW()
+        WHERE id = #{id}
+        AND deleted_at IS NULL
+    </update>
+
+
+    <!-- 마지막 로그인시간 -->
     <update id="updateLastLogin">
         UPDATE `user`
         SET last_login_at = #{lastLoginAt},

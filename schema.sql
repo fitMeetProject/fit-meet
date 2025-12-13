@@ -217,6 +217,111 @@ CREATE TABLE `meal_nutrition` (
                                       FOREIGN KEY (`meal_id`) REFERENCES `meal`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+######################### 커뮤니티 #########################
+
+-- 커뮤니티 게시글
+DROP TABLE IF EXISTS `community_post`;
+CREATE TABLE `community_post` (
+                                  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                                  `user_id` BIGINT UNSIGNED NOT NULL, -- 작성자 (로그인 유저)
+                                  `title` VARCHAR(200) NOT NULL,
+                                  `content` TEXT NOT NULL,
+                                  `category` VARCHAR(30) NOT NULL DEFAULT 'GENERAL', -- DIET_STREAK / CHALLENGE / WORKOUT / GENERAL 등
+
+                                  `activity_date` DATE NULL, -- 이 게시글이 공유하는 기준 날짜
+                                  `share_diet` TINYINT(1) NOT NULL DEFAULT 0, -- 식단 요약 공유 여부
+                                  `share_streak` TINYINT(1) NOT NULL DEFAULT 0, -- 스트릭 정보 공유 여부
+                                  `share_workout` TINYINT(1) NOT NULL DEFAULT 0, -- 운동 정보 공유 여부
+                                  `workout_note` VARCHAR(255) NULL, -- 어떤 운동 했는지 메모
+                                  `workout_video_url` VARCHAR(255) NULL, -- 참고한 운동 영상/콘텐츠 URL
+
+                                  `like_count` INT UNSIGNED NOT NULL DEFAULT 0,
+                                  `view_count` INT UNSIGNED NOT NULL DEFAULT 0,
+                                  `comment_count` INT UNSIGNED NOT NULL DEFAULT 0,
+                                  `is_deleted` TINYINT(1) NOT NULL DEFAULT 0, -- 휴지통 여부
+                                  `deleted_at` DATETIME NULL,
+                                  `created_at` DATETIME NOT NULL,
+                                  `updated_at` DATETIME NOT NULL,
+
+                                  PRIMARY KEY (`id`),
+                                  INDEX `idx_post_user` (`user_id`),
+                                  INDEX `idx_post_category` (`category`),
+                                  INDEX `idx_post_deleted` (`is_deleted`, `deleted_at`),
+                                  INDEX `idx_post_popular` (`like_count`, `view_count`, `created_at` DESC),
+                                  INDEX `idx_post_activity` (`activity_date`),
+
+                                  CONSTRAINT `fk_community_post_user`
+                                      FOREIGN KEY (`user_id`) REFERENCES `user`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+
+-- 태그
+DROP TABLE IF EXISTS `community_tag`;
+CREATE TABLE `community_tag` (
+                                 `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                                 `name` VARCHAR(50) NOT NULL, -- '#헬스' 말고 '헬스'만 ( 백에서 정규화 해줄 예정 )
+                                 `usage_count` INT UNSIGNED NOT NULL DEFAULT 0,
+
+                                 `created_at` DATETIME NOT NULL,
+                                 `updated_at` DATETIME NOT NULL,
+
+                                 PRIMARY KEY (`id`),
+                                 UNIQUE KEY `uk_tag_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- 태그, 게시글 조인테이블
+DROP TABLE IF EXISTS `community_post_tag`;
+CREATE TABLE `community_post_tag` (
+                                      `post_id` BIGINT UNSIGNED NOT NULL,
+                                      `tag_id`  BIGINT UNSIGNED NOT NULL,
+
+                                      PRIMARY KEY (`post_id`, `tag_id`),
+                                      INDEX `idx_posttag_tag` (`tag_id`),
+                                      CONSTRAINT `fk_posttag_post`
+                                          FOREIGN KEY (`post_id`) REFERENCES `community_post`(`id`) ON DELETE CASCADE,
+                                      CONSTRAINT `fk_posttag_tag`
+                                          FOREIGN KEY (`tag_id`) REFERENCES `community_tag`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- 좋아요
+DROP TABLE IF EXISTS `community_post_like`;
+CREATE TABLE `community_post_like` (
+                                       `post_id` BIGINT UNSIGNED NOT NULL,
+                                       `user_id` BIGINT UNSIGNED NOT NULL,
+                                       `created_at` DATETIME NOT NULL,
+
+                                       PRIMARY KEY (`post_id`, `user_id`),
+                                       INDEX `idx_like_user` (`user_id`, `created_at` DESC),
+                                       CONSTRAINT `fk_like_post`
+                                           FOREIGN KEY (`post_id`) REFERENCES `community_post`(`id`) ON DELETE CASCADE,
+                                       CONSTRAINT `fk_like_user`
+                                           FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- 댓글
+DROP TABLE IF EXISTS `community_comment`;
+CREATE TABLE `community_comment` (
+                                     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                                     `post_id` BIGINT UNSIGNED NOT NULL,
+                                     `user_id` BIGINT UNSIGNED NOT NULL,
+                                     `content` VARCHAR(500) NOT NULL,
+                                     `parent_id` BIGINT UNSIGNED NULL,
+                                     `is_deleted` TINYINT(1) NOT NULL DEFAULT 0,
+                                     `deleted_at` DATETIME NULL,
+
+                                     `created_at` DATETIME NOT NULL,
+                                     `updated_at` DATETIME NOT NULL,
+
+                                     PRIMARY KEY (`id`),
+                                     INDEX `idx_comment_post` (`post_id`),
+                                     INDEX `idx_comment_user` (`user_id`),
+                                     CONSTRAINT `fk_comment_post`
+                                         FOREIGN KEY (`post_id`) REFERENCES `community_post`(`id`) ON DELETE CASCADE,
+                                     CONSTRAINT `fk_comment_user`
+                                         FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+
 ######################### 대시보드 #########################
 
 -- 유저 별 일자별 섭취 영양 요약
@@ -263,4 +368,7 @@ CREATE TABLE `user_daily_activity` (
                                            FOREIGN KEY (`user_id`) REFERENCES `user`(`id`)
                                                ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+
+
 

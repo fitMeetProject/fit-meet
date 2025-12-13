@@ -1,14 +1,15 @@
 package com.ssafy.fitmeet.domain.user.dto;
 
-import java.time.LocalDate;
-
 import com.ssafy.fitmeet.domain.user.entity.User;
 import com.ssafy.fitmeet.domain.user.entity.UserBodyInfo;
+
+import java.time.LocalDate;
 
 public class UserDto {
 
     // 프로필 + 신체 정보 수정 요청
     public record UpdateProfileRequest(
+            String name,
             String nickname,
             Double heightCm,
             Double weightKg,
