@@ -47,6 +47,9 @@ public enum ErrorCode {
     LIKE_ALREADY_EXISTS(5004, HttpStatus.BAD_REQUEST, "이미 좋아요한 게시글입니다."),
     LIKE_NOT_FOUND(5005, HttpStatus.BAD_REQUEST, "좋아요 정보가 없습니다."),
 
+    // 6000번대 : 운동영상 관련
+    RESOURCE_NOT_FOUND(6001, HttpStatus.BAD_REQUEST, "영상 정보가 없습니다."),
+
     // 8000번대: DB 관련
     DB_DUPLICATE_KEY(8001, HttpStatus.CONFLICT, "이미 존재하는 데이터입니다."),
     DB_ERROR(8002, HttpStatus.INTERNAL_SERVER_ERROR, "데이터베이스 오류가 발생했습니다."),

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.fitmeet.domain.training.dao.TrainingVideoHistoryDao">
+
+    <resultMap id="TrainingVideoHistoryMap" type="com.ssafy.fitmeet.domain.training.entity.TrainingVideoHistory">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="videoId" column="video_id"/>
+        <result property="activityDate" column="activity_date"/>
+        <result property="completed" column="completed"/>
+        <result property="durationSec" column="duration_sec"/>
+        <result property="memo" column="memo"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByUserAndVideoAndDate" resultMap="TrainingVideoHistoryMap">
+        SELECT *
+        FROM training_video_history
+        WHERE user_id = #{userId}
+        AND video_id = #{videoId}
+        AND activity_date = #{activityDate}
+    </select>
+
+    <insert id="insertHistory" parameterType="com.ssafy.fitmeet.domain.training.entity.TrainingVideoHistory" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO training_video_history (
+        user_id, video_id, activity_date,
+        completed, duration_sec, memo,
+        created_at, updated_at
+        ) VALUES (
+        #{userId}, #{videoId}, #{activityDate},
+        #{completed}, #{durationSec}, #{memo},
+        NOW(), NOW()
+        )
+    </insert>
+
+    <update id="updateHistory" parameterType="com.ssafy.fitmeet.domain.training.entity.TrainingVideoHistory">
+        UPDATE training_video_history
+        SET completed = #{completed},
+        duration_sec = #{durationSec},
+        memo = #{memo},
+        updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <select id="findByUserAndDate" resultMap="TrainingVideoHistoryMap">
+        SELECT *
+        FROM training_video_history
+        WHERE user_id = #{userId}
+        AND activity_date = #{activityDate}
+        AND completed = 1
+    </select>
+
+</mapper>

@@ -5,11 +5,10 @@ import com.ssafy.fitmeet.domain.community.service.CommunityService;
 import com.ssafy.fitmeet.global.response.Response;
 import com.ssafy.fitmeet.global.response.ResponseUtil;
 import com.ssafy.fitmeet.global.security.CustomUserDetails;
-
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -101,6 +100,7 @@ public class CommunityRestController {
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "tag", required = false) String tag,
             @RequestParam(value = "category", required = false) String category,
+            @Schema(description = "목록 정렬 기준", example = "POPULAR / OLDEST / LATEST")
             @RequestParam(value = "sort", required = false, defaultValue = "POPULAR") String sort,
             @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
             @RequestParam(value = "size", required = false, defaultValue = "20") Integer size

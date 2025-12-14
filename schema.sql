@@ -321,6 +321,100 @@ CREATE TABLE `community_comment` (
                                          FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
+######################### 운동영상 #########################
+
+DROP TABLE IF EXISTS `training_video`;
+CREATE TABLE `training_video` (
+                                  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                                  `youtube_video_id` VARCHAR(50) NOT NULL,
+                                  `title` VARCHAR(200) NOT NULL,
+                                  `description` TEXT NULL,
+                                  `thumbnail_url` VARCHAR(255) NOT NULL,
+                                  `duration_sec` INT NOT NULL,
+                                  `main_category` VARCHAR(50) NOT NULL, -- YOGA, PILATES, etc
+                                  `level` VARCHAR(20) NULL, -- BEGINNER, INTERMEDIATE, etc
+                                  `tags` VARCHAR(255) NULL,
+                                   -- 앱 내부 수치
+                                  `view_count` BIGINT NOT NULL DEFAULT 0,
+                                  `like_count` BIGINT NOT NULL DEFAULT 0,
+                                   -- 유튜브 통계
+                                  `youtube_view_cnt` BIGINT NULL,
+                                  `youtube_like_cnt` BIGINT NULL,
+                                  `published_at` DATETIME NULL,
+                                  `is_recommended` TINYINT(1) NOT NULL DEFAULT 0,
+                                  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+                                  `channel_title` VARCHAR(200) NULL,
+                                  `created_at` DATETIME NOT NULL,
+                                  `updated_at` DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+
+DROP TABLE IF EXISTS `training_video_like`;
+CREATE TABLE `training_video_like` (
+                                       `user_id` BIGINT UNSIGNED NOT NULL,
+                                       `video_id` BIGINT UNSIGNED NOT NULL,
+                                       `created_at` DATETIME NOT NULL,
+                                       PRIMARY KEY (`user_id`, `video_id`),
+                                       CONSTRAINT `fk_training_video_like_user`
+                                           FOREIGN KEY (`user_id`) REFERENCES `user`(`id`),
+                                       CONSTRAINT `fk_training_video_like_video`
+                                           FOREIGN KEY (`video_id`) REFERENCES `training_video`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `training_youtube_source`;
+CREATE TABLE `training_youtube_source` (
+                                           `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                                           `source_type` VARCHAR(20) NOT NULL, -- KEYWORD / PLAYLIST
+                                           `source_value` VARCHAR(255) NOT NULL, -- 검색어 or PlaylistId
+                                           `main_category` VARCHAR(50) NOT NULL, -- YOGA / PILATES / HOME ...
+                                           `level` VARCHAR(20) NULL, -- BEGINNER / INTERMEDIATE / ADVANCED
+                                           `max_results` INT NOT NULL DEFAULT 20,
+                                           `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+                                           `created_at` DATETIME NOT NULL,
+                                           `updated_at` DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+INSERT INTO training_youtube_source(source_type, source_value, main_category, level, max_results, is_active)
+VALUES
+    ('KEYWORD', '전신운동 15분', 'HOME', 'BEGINNER', 20, 1),
+    ('KEYWORD', '요가 스트레칭 10분', 'YOGA', 'BEGINNER', 20, 1),
+    ('KEYWORD', '필라테스 core workout', 'PILATES', 'ALL', 20, 1);
+
+DROP TABLE IF EXISTS `training_video_history`;
+CREATE TABLE `training_video_history` (
+                                          `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                                          `user_id` BIGINT UNSIGNED NOT NULL,
+                                          `video_id` BIGINT UNSIGNED NOT NULL,
+                                          `activity_date` DATE NOT NULL, -- YYYY-MM-DD
+                                          `completed` TINYINT(1) NOT NULL DEFAULT 1,
+                                          `duration_sec` INT NULL,
+                                          `memo` VARCHAR(255) NULL,
+                                          `created_at` DATETIME NOT NULL,
+                                          `updated_at` DATETIME NOT NULL,
+
+                                          CONSTRAINT `fk_tv_history_user`
+                                              FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
+                                          CONSTRAINT `fk_tv_history_video`
+                                              FOREIGN KEY (`video_id`) REFERENCES `training_video`(`id`) ON DELETE CASCADE,
+                                          CONSTRAINT `uq_tv_history_user_video_date`
+                                              UNIQUE (`user_id`, `video_id`, `activity_date`)
+) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- 운동 영상 댓글
+DROP TABLE IF EXISTS `training_video_comment`;
+CREATE TABLE `training_video_comment` (
+                                          `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                                          `video_id` BIGINT UNSIGNED NOT NULL,
+                                          `user_id` BIGINT UNSIGNED NOT NULL,
+                                          `content` VARCHAR(500) NOT NULL,
+                                          `created_at` DATETIME NOT NULL,
+                                          `updated_at` DATETIME NOT NULL,
+                                          `deleted_at` DATETIME NULL,
+                                          CONSTRAINT `fk_tvc_video`
+                                              FOREIGN KEY (`video_id`) REFERENCES `training_video`(`id`) ON DELETE CASCADE,
+                                          CONSTRAINT `fk_tvc_user`
+                                              FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 ######################### 대시보드 #########################
 
@@ -341,8 +435,8 @@ CREATE TABLE `user_daily_nutrition` (
                                         `diet_score_sum` INT NULL, -- 점수 합 (옵션)
                                         `meal_count` INT NOT NULL DEFAULT 0, -- 등록된 식단 건수
 
-                                        `created_at`     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                        `updated_at`     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                        `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                        `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
                                         PRIMARY KEY (`user_id`, `date`),
                                         CONSTRAINT `fk_udn_user`
@@ -368,6 +462,7 @@ CREATE TABLE `user_daily_activity` (
                                            FOREIGN KEY (`user_id`) REFERENCES `user`(`id`)
                                                ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
 
 
 

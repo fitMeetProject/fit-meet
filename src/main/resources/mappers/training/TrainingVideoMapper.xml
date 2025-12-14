@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.fitmeet.domain.training.dao.TrainingVideoDao">
+
+    <resultMap id="TrainingVideoMap" type="com.ssafy.fitmeet.domain.training.entity.TrainingVideo">
+        <id property="id" column="id"/>
+        <result property="youtubeVideoId" column="youtube_video_id"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="thumbnailUrl" column="thumbnail_url"/>
+        <result property="durationSec" column="duration_sec"/>
+        <result property="mainCategory" column="main_category"/>
+        <result property="level" column="level"/>
+        <result property="tags" column="tags"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="likeCount" column="like_count"/>
+        <result property="youtubeViewCnt" column="youtube_view_cnt"/>
+        <result property="youtubeLikeCnt" column="youtube_like_cnt"/>
+        <result property="publishedAt" column="published_at"/>
+        <result property="isRecommended" column="is_recommended"/>
+        <result property="isActive" column="is_active"/>
+        <result property="channelTitle" column="channel_title"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+
+    <select id="findRecommended" resultType="TrainingVideo">
+        SELECT *
+        FROM training_video
+        WHERE is_active = 1
+        <if test="category != null">
+            AND main_category = #{category}
+        </if>
+        ORDER BY view_count DESC, like_count DESC
+        LIMIT #{limit}
+    </select>
+
+    <sql id="VideoSearchCondition">
+        FROM training_video
+        WHERE is_active = 1
+        <if test="category != null and category != ''">
+            AND main_category = #{category}
+        </if>
+        <if test="level != null and level != ''">
+            AND level = #{level}
+        </if>
+
+        <if test="shortVideo != null and shortVideo == true">
+            AND duration_sec &lt;= 900
+        </if>
+    </sql>
+
+    <select id="findVideos" resultMap="TrainingVideoMap">
+        SELECT *
+        <include refid="VideoSearchCondition"/>
+
+        <choose>
+            <when test="sort != null and sort == 'POPULAR'">
+                ORDER BY view_count DESC, like_count DESC
+            </when>
+            <when test="sort != null and sort == 'LATEST'">
+                ORDER BY created_at DESC
+            </when>
+            <otherwise>
+                ORDER BY created_at DESC
+            </otherwise>
+        </choose>
+
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countVideos" resultType="long">
+        SELECT COUNT(*)
+        <include refid="VideoSearchCondition"/>
+    </select>
+
+
+    <select id="findById" resultType="TrainingVideo">
+        SELECT *
+        FROM training_video
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByYoutubeVideoId" resultType="com.ssafy.fitmeet.domain.training.entity.TrainingVideo">
+        SELECT *
+        FROM training_video
+        WHERE youtube_video_id = #{youtubeVideoId}
+    </select>
+
+    <insert id="insertVideo" parameterType="com.ssafy.fitmeet.domain.training.entity.TrainingVideo" useGeneratedKeys="true" keyProperty="id">
+
+        INSERT INTO training_video (
+        youtube_video_id, title, description, thumbnail_url,
+        duration_sec, main_category, level, tags,
+        view_count, like_count,
+        youtube_view_cnt, youtube_like_cnt, published_at,
+        is_recommended, is_active,
+        channel_title,
+        created_at, updated_at
+        )
+        VALUES (
+        #{youtubeVideoId}, #{title}, #{description}, #{thumbnailUrl},
+        #{durationSec}, #{mainCategory}, #{level}, #{tags},
+        #{viewCount}, #{likeCount},
+        #{youtubeViewCnt}, #{youtubeLikeCnt}, #{publishedAt},
+        #{isRecommended}, #{isActive},
+        #{channelTitle},
+        NOW(), NOW()
+        )
+    </insert>
+
+
+    <update id="updateVideoFromYoutube" parameterType="com.ssafy.fitmeet.domain.training.entity.TrainingVideo">
+        UPDATE training_video
+        SET
+        title = #{title},
+        description = #{description},
+        thumbnail_url = #{thumbnailUrl},
+        duration_sec = #{durationSec},
+        main_category = #{mainCategory},
+        level = #{level},
+        tags = #{tags},
+        channel_title = #{channelTitle},
+        youtube_view_cnt = #{youtubeViewCnt},
+        youtube_like_cnt = #{youtubeLikeCnt},
+        published_at = #{publishedAt},
+        is_active = #{isActive},
+        updated_at = NOW()
+        WHERE youtube_video_id = #{youtubeVideoId}
+    </update>
+
+
+    <select id="isLiked" resultType="Integer">
+        SELECT 1
+        FROM training_video_like
+        WHERE user_id = #{userId}
+        AND video_id = #{videoId}
+        LIMIT 1
+    </select>
+
+    <insert id="insertLike">
+        INSERT INTO training_video_like (user_id, video_id, created_at)
+        VALUES (#{userId}, #{videoId}, NOW())
+    </insert>
+
+    <delete id="deleteLike">
+        DELETE FROM training_video_like
+        WHERE user_id = #{userId}
+        AND video_id = #{videoId}
+    </delete>
+
+    <update id="increaseLikeCount">
+        UPDATE training_video
+        SET like_count = like_count + 1
+        WHERE id = #{id}
+    </update>
+
+    <update id="decreaseLikeCount">
+        UPDATE training_video
+        SET like_count = like_count - 1
+        WHERE id = #{id}
+    </update>
+
+</mapper>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.fitmeet.domain.training.dao.TrainingYoutubeSourceDao">
+
+    <resultMap id="TrainingYoutubeSourceMap" type="com.ssafy.fitmeet.domain.training.entity.TrainingYoutubeSource">
+        <id property="id" column="id"/>
+        <result property="sourceType" column="source_type"/>
+        <result property="sourceValue" column="source_value"/>
+        <result property="mainCategory" column="main_category"/>
+        <result property="level" column="level"/>
+        <result property="maxResults" column="max_results"/>
+        <result property="isActive" column="is_active"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findActiveSources" resultMap="TrainingYoutubeSourceMap">
+        SELECT
+        id,
+        source_type,
+        source_value,
+        main_category,
+        level,
+        max_results,
+        is_active,
+        created_at,
+        updated_at
+        FROM training_youtube_source
+        WHERE is_active = 1
+    </select>
+
+</mapper>
