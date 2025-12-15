@@ -125,7 +125,7 @@ public class DietDto {
         public static DietFoodResponse from(DietInfo info) {
             return new DietFoodResponse(
                     info.getId(),
-                    info.getMealId(),          // 🔹 DietInfo.mealId
+                    info.getMealId(),
                     info.getFoodNmKr(),
                     info.getFoodCode(),
                     info.getSourceType(),
@@ -209,4 +209,54 @@ public class DietDto {
             );
         }
     }
+
+    /**
+     * 저장 전 영양소 미리보기 요청
+     * - foods: DietCreate/Update 때 쓰는 foods 구조 그대로 재사용
+     */
+    public record DietNutritionPreviewRequest(
+            List<DietFoodRequest> foods
+    ) {}
+
+    /**
+     * 저장 전 영양소 미리보기 응답
+     * - foods: 개별 음식 결과
+     * - totals: 한 끼 합계 (UI 상단 카드용)
+     */
+    public record DietNutritionPreviewResponse(
+            List<DietFoodPreviewResponse> foods,
+            DietNutritionTotals totals
+    ) {}
+
+    public record DietNutritionTotals(
+            BigDecimal totalKcal,
+            BigDecimal totalCarbohydrate,
+            BigDecimal totalProtein,
+            BigDecimal totalFat,
+            BigDecimal totalSugar,
+            BigDecimal totalSodium,
+            BigDecimal totalDietaryFiber
+    ) {}
+
+    /**
+     * 저장 전 개별 음식 결과
+     * - API/IMAGE: 서버가 계산한 영양소(섭취량 반영) 반환
+     * - MANUAL: 입력값 그대로 반환
+     */
+    public record DietFoodPreviewResponse(
+            Long mealId,
+            String foodNmKr,
+            String foodCode,
+            String sourceType,
+            BigDecimal intakeGram,
+            BigDecimal kcal,
+            BigDecimal carbohydrate,
+            BigDecimal protein,
+            BigDecimal fat,
+            BigDecimal sugar,
+            BigDecimal sodium,
+            BigDecimal dietaryFiber
+    ) { }
+
+
 }

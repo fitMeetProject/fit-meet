@@ -1,13 +1,16 @@
 package com.ssafy.fitmeet.domain.diet.service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-
-import com.ssafy.fitmeet.domain.diet.dto.DietDto.*;
+import com.ssafy.fitmeet.domain.diet.dto.DietDto.DietCreateRequest;
+import com.ssafy.fitmeet.domain.diet.dto.DietDto.DietNutritionPreviewRequest;
+import com.ssafy.fitmeet.domain.diet.dto.DietDto.DietNutritionPreviewResponse;
+import com.ssafy.fitmeet.domain.diet.dto.DietDto.DietUpdateRequest;
 import com.ssafy.fitmeet.domain.diet.entity.Diet;
 import com.ssafy.fitmeet.domain.diet.entity.DietInfo;
 import com.ssafy.fitmeet.domain.diet.entity.DietScore;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 public interface DietService {
 
@@ -66,4 +69,9 @@ public interface DietService {
      * 식단 점수 조회
      */
     DietScore getDietScore(Long dietId);
+
+    /**
+     * 무게에 따른 영양분 계산 미리보기
+     */
+    DietNutritionPreviewResponse previewNutrition(DietNutritionPreviewRequest request);
 }

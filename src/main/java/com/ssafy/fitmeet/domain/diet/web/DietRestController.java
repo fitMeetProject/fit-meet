@@ -159,4 +159,11 @@ public class DietRestController {
 
         return ResponseEntity.ok(ResponseUtil.ok("식단 점수 저장 완료", body));
     }
+
+    @PostMapping("/nutrition")
+    @Operation(summary = "영양소 미리보기(저장 전)", description = "foods 배열을 받아 영양소를 계산해 반환. API/IMAGE는 intakeGram 반영 계산, MANUAL은 입력값 그대로 반환. totals(한 끼 합계) 포함.")
+    public ResponseEntity<Response<?>> previewNutrition(@RequestBody DietNutritionPreviewRequest request) {
+        var res = dietService.previewNutrition(request);
+        return ResponseEntity.ok(ResponseUtil.ok(res));
+    }
 }

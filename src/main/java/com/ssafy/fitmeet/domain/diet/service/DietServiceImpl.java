@@ -376,4 +376,113 @@ public class DietServiceImpl implements DietService {
     public DietScore getDietScore(Long dietId) {
         return dietScoreDao.findByDietId(dietId);
     }
+
+    @Override
+    public DietNutritionPreviewResponse previewNutrition(DietNutritionPreviewRequest request) {
+        if (request == null || request.foods() == null || request.foods().isEmpty()) {
+            throw new CustomException(ErrorCode.DIET_PREVIEW_FOODS_REQUIRED);
+        }
+
+        List<DietFoodPreviewResponse> foods = request.foods().stream()
+                .map(this::previewOneFood)
+                .toList();
+
+        DietNutritionTotals totals = sumTotals(foods);
+
+        return new DietNutritionPreviewResponse(foods, totals);
+    }
+
+    private DietFoodPreviewResponse previewOneFood(DietFoodRequest item) {
+        if (item == null) {
+            throw new CustomException(ErrorCode.DIET_PREVIEW_FOODS_REQUIRED);
+        }
+
+        String sourceType = (item.sourceType() == null || item.sourceType().isBlank())
+                ? "MANUAL"
+                : item.sourceType().toUpperCase();
+
+        if ("MANUAL".equals(sourceType)) {
+            return new DietFoodPreviewResponse(
+                    null,
+                    item.foodNmKr(),
+                    item.foodCode(),
+                    "MANUAL",
+                    item.intakeGram(),
+                    zero(item.kcal()),
+                    zero(item.carbohydrate()),
+                    zero(item.protein()),
+                    zero(item.fat()),
+                    zero(item.sugar()),
+                    zero(item.sodium()),
+                    zero(item.dietaryFiber())
+            );
+        }
+
+        if (item.intakeGram() == null || item.intakeGram().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new CustomException(ErrorCode.DIET_INTAKE_GRAM_REQUIRED);
+        }
+
+        if (item.foodCode() == null || item.foodCode().isBlank()) {
+            throw new CustomException(ErrorCode.DIET_FOOD_CODE_REQUIRED);
+        }
+
+        Meal meal = mealService.getOrFetchMealByFoodCd(item.foodCode());
+        MealNutrition nutrition = mealService.getOrFetchNutritionByFoodCd(item.foodCode());
+
+        BigDecimal baseAmount = nutrition.getBaseAmountG();
+        BigDecimal intakeGram = item.intakeGram();
+
+        BigDecimal kcal = mealService.calculateScaled(baseAmount, nutrition.getKcal(), intakeGram);
+        BigDecimal carbohydrate = mealService.calculateScaled(baseAmount, nutrition.getCarbohydrate(), intakeGram);
+        BigDecimal protein = mealService.calculateScaled(baseAmount, nutrition.getProtein(), intakeGram);
+        BigDecimal fat = mealService.calculateScaled(baseAmount, nutrition.getFat(), intakeGram);
+        BigDecimal sugar = mealService.calculateScaled(baseAmount, nutrition.getSugar(), intakeGram);
+        BigDecimal sodium = mealService.calculateScaled(baseAmount, nutrition.getSodium(), intakeGram);
+        BigDecimal dietaryFiber = mealService.calculateScaled(baseAmount, nutrition.getDietaryFiber(), intakeGram);
+
+        return new DietFoodPreviewResponse(
+                meal.getId(),
+                meal.getFoodNmKr(),
+                meal.getFoodCd(),
+                sourceType, // API or IMAGE
+                intakeGram,
+                zero(kcal),
+                zero(carbohydrate),
+                zero(protein),
+                zero(fat),
+                zero(sugar),
+                zero(sodium),
+                zero(dietaryFiber)
+        );
+    }
+
+    private DietNutritionTotals sumTotals(List<DietFoodPreviewResponse> foods) {
+        BigDecimal totalKcal = BigDecimal.ZERO;
+        BigDecimal totalCarbo = BigDecimal.ZERO;
+        BigDecimal totalProtein = BigDecimal.ZERO;
+        BigDecimal totalFat = BigDecimal.ZERO;
+        BigDecimal totalSugar = BigDecimal.ZERO;
+        BigDecimal totalSodium = BigDecimal.ZERO;
+        BigDecimal totalDietaryFiber = BigDecimal.ZERO;
+
+        for (DietFoodPreviewResponse f : foods) {
+            totalKcal = totalKcal.add(zero(f.kcal()));
+            totalCarbo = totalCarbo.add(zero(f.carbohydrate()));
+            totalProtein = totalProtein.add(zero(f.protein()));
+            totalFat = totalFat.add(zero(f.fat()));
+            totalSugar = totalSugar.add(zero(f.sugar()));
+            totalSodium = totalSodium.add(zero(f.sodium()));
+            totalDietaryFiber = totalDietaryFiber.add(zero(f.dietaryFiber()));
+        }
+
+        return new DietNutritionTotals(
+                totalKcal,
+                totalCarbo,
+                totalProtein,
+                totalFat,
+                totalSugar,
+                totalSodium,
+                totalDietaryFiber
+        );
+    }
 }

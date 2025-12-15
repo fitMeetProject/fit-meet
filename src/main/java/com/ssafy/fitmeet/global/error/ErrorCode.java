@@ -34,6 +34,9 @@ public enum ErrorCode {
     MEAL_NOT_FOUND2(3003, HttpStatus.BAD_REQUEST, "공공데이터 영양정보를 가져올 수 없습니다."),
     DIET_FOOD_CODE_REQUIRED(3004, HttpStatus.BAD_REQUEST, "API/IMAGE 모드에서는 foodCode가 필요합니다."),
 
+    DIET_PREVIEW_FOODS_REQUIRED(3005, HttpStatus.BAD_REQUEST, "미리보기 foods는 비어 있을 수 없습니다."),
+    DIET_INTAKE_GRAM_REQUIRED(3006, HttpStatus.BAD_REQUEST, "섭취량(intakeGram)은 0보다 커야 합니다."),
+
     // 4000번대: 파일 업로드 관련
     FILE_EMPTY(4001, HttpStatus.BAD_REQUEST, "업로드된 파일이 없습니다."),
     FILE_INVALID_TYPE(4002, HttpStatus.BAD_REQUEST, "허용되지 않은 파일 형식입니다."),
