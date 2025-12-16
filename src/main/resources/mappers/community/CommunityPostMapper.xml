@@ -16,6 +16,7 @@
         <result property="shareStreak" column="share_streak"/>
         <result property="shareWorkout" column="share_workout"/>
         <result property="workoutNote" column="workout_note"/>
+        <result property="workoutVideoId" column="workout_video_id"/>
         <result property="workoutVideoUrl" column="workout_video_url"/>
         <result property="likeCount" column="like_count"/>
         <result property="viewCount" column="view_count"/>
@@ -31,13 +32,13 @@
         INSERT INTO `community_post` (
         `user_id`, `title`, `content`, `category`,
         `activity_date`, `share_diet`, `share_streak`, `share_workout`,
-        `workout_note`, `workout_video_url`,
+        `workout_note`,`workout_video_id`, `workout_video_url`,
         `like_count`, `view_count`, `comment_count`,
         `is_deleted`, `created_at`, `updated_at`
         ) VALUES (
         #{userId}, #{title}, #{content}, #{category},
         #{activityDate}, #{shareDiet}, #{shareStreak}, #{shareWorkout},
-        #{workoutNote}, #{workoutVideoUrl},
+        #{workoutNote}, #{workoutVideoId}, #{workoutVideoUrl},
         #{likeCount}, #{viewCount}, #{commentCount},
         #{isDeleted}, #{createdAt}, #{updatedAt}
         )
@@ -137,7 +138,7 @@
         </choose>
 
         <if test="page != null and size != null">
-            LIMIT #{size} OFFSET #{page} * #{size}
+            LIMIT #{size} OFFSET #{offset}
         </if>
     </select>
 

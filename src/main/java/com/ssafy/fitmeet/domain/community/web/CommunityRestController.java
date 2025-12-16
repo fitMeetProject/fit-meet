@@ -34,7 +34,7 @@ public class CommunityRestController {
         Long userId = userDetails.getId();
 
         Long postId = communityService.createPost(userId, request);
-        PostDetailResponse body = communityService.getPostDetail(userId, postId);
+        PostDetailResponse body = communityService.getPostDetail(userId, postId, true);
 
         return ResponseEntity.ok(ResponseUtil.ok("게시글 등록 완료", body));
     }
@@ -48,7 +48,7 @@ public class CommunityRestController {
     @Operation(summary = "게시글 상세 조회", description = "게시글 상세, 태그, 활동 요약(식단/스트릭/운동), 좋아요 여부 등을 조회")
     public ResponseEntity<Response<PostDetailResponse>> getPostDetail(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long postId) {
         Long currentUserId = (userDetails != null) ? userDetails.getId() : null; // 비로그인 허용 시 대비
-        PostDetailResponse body = communityService.getPostDetail(currentUserId, postId);
+        PostDetailResponse body = communityService.getPostDetail(currentUserId, postId, false);
 
         return ResponseEntity.ok(ResponseUtil.ok(body));
     }
@@ -107,7 +107,7 @@ public class CommunityRestController {
     ) {
         Long currentUserId = (userDetails != null) ? userDetails.getId() : null;
 
-        PostSearchCondition cond = new PostSearchCondition(keyword, tag, category, sort, page, size);
+        PostSearchCondition cond = new PostSearchCondition(keyword, tag, category, sort, page, size, 0);
         List<PostSummaryResponse> body = communityService.searchPosts(currentUserId, cond);
         return ResponseEntity.ok(ResponseUtil.ok(body));
     }

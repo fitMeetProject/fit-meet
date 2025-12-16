@@ -25,6 +25,7 @@ public class CommunityPost {
     private boolean shareStreak;
     private boolean shareWorkout;
     private String workoutNote;
+    private int workoutVideoId;
     private String workoutVideoUrl;
 
     private int likeCount;

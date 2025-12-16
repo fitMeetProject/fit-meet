@@ -17,6 +17,7 @@ public class CommunityDto {
             Boolean shareStreak,
             Boolean shareWorkout,
             String workoutNote,
+            Integer workoutVideoId,
             String workoutVideoUrl
     ) {}
 
@@ -31,6 +32,7 @@ public class CommunityDto {
             Boolean shareStreak,
             Boolean shareWorkout,
             String workoutNote,
+            Integer workoutVideoId,
             String workoutVideoUrl
     ) {}
 
@@ -41,7 +43,8 @@ public class CommunityDto {
             String category,
             String sort, // POPULAR / LATEST / OLDEST
             Integer page,
-            Integer size
+            Integer size,
+            Integer offset
     ) {}
 
     // 게시글 목록용 요약 응답
@@ -78,6 +81,7 @@ public class CommunityDto {
             Double todaySodium,
             Integer streakCount,
             String workoutNote,
+            Integer workoutVideoId,
             String workoutVideoUrl
     ) {}
 

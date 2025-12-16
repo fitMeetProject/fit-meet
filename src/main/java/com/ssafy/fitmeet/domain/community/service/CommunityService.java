@@ -14,7 +14,7 @@ public interface CommunityService {
 
     void restorePost(Long userId, Long postId);
 
-    PostDetailResponse getPostDetail(Long currentUserId, Long postId);
+    PostDetailResponse getPostDetail(Long currentUserId, Long postId, boolean isCreate);
 
     List<PostSummaryResponse> searchPosts(Long currentUserId, PostSearchCondition condition);
 

@@ -256,6 +256,7 @@ CREATE TABLE `community_post` (
                                   `share_streak` TINYINT(1) NOT NULL DEFAULT 0, -- 스트릭 정보 공유 여부
                                   `share_workout` TINYINT(1) NOT NULL DEFAULT 0, -- 운동 정보 공유 여부
                                   `workout_note` VARCHAR(255) NULL, -- 어떤 운동 했는지 메모
+                                  `work_video_id` BIGINT NULL,
                                   `workout_video_url` VARCHAR(255) NULL, -- 참고한 운동 영상/콘텐츠 URL
 
                                   `like_count` INT UNSIGNED NOT NULL DEFAULT 0,

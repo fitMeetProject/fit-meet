@@ -51,6 +51,7 @@ public class CommunityServiceImpl implements CommunityService {
                 .shareStreak(Boolean.TRUE.equals(request.shareStreak()))
                 .shareWorkout(Boolean.TRUE.equals(request.shareWorkout()))
                 .workoutNote(request.workoutNote())
+                .workoutVideoId(request.workoutVideoId())
                 .workoutVideoUrl(request.workoutVideoUrl())
                 .likeCount(0)
                 .viewCount(0)
@@ -83,9 +84,9 @@ public class CommunityServiceImpl implements CommunityService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public PostDetailResponse getPostDetail(Long currentUserId, Long postId) {
-        postDao.increaseViewCount(postId);
+    @Transactional
+    public PostDetailResponse getPostDetail(Long currentUserId, Long postId, boolean isCreate) {
+        if(!isCreate) postDao.increaseViewCount(postId);
 
         CommunityPost post = postDao.findById(postId);
         if (post == null || post.isDeleted()) {
@@ -113,7 +114,7 @@ public class CommunityServiceImpl implements CommunityService {
                 post.isShareStreak(),
                 post.isShareWorkout(),
                 post.getLikeCount(),
-                post.getViewCount() + 1,
+                isCreate?post.getViewCount() : post.getViewCount() + 1,
                 post.getCommentCount(),
                 likedByMe,
                 tags,
@@ -182,6 +183,7 @@ public class CommunityServiceImpl implements CommunityService {
                 todaySodium,
                 streakCount,
                 post.isShareWorkout() ? post.getWorkoutNote() : null,
+                post.isShareWorkout() ? post.getWorkoutVideoId() : 0,
                 post.isShareWorkout() ? post.getWorkoutVideoUrl() : null
         );
     }
@@ -205,6 +207,7 @@ public class CommunityServiceImpl implements CommunityService {
         post.setShareStreak(Boolean.TRUE.equals(request.shareStreak()));
         post.setShareWorkout(Boolean.TRUE.equals(request.shareWorkout()));
         post.setWorkoutNote(request.workoutNote());
+        post.setWorkoutVideoId(request.workoutVideoId());
         post.setWorkoutVideoUrl(request.workoutVideoUrl());
         post.setUpdatedAt(LocalDateTime.now());
         postDao.update(post);
@@ -357,7 +360,19 @@ public class CommunityServiceImpl implements CommunityService {
     @Override
     @Transactional(readOnly = true)
     public List<PostSummaryResponse> searchPosts(Long currentUserId, PostSearchCondition cond) {
-        List<CommunityPost> posts = postDao.search(cond);
+        int page = (cond.page() == null || cond.page() < 0) ? 0 : cond.page();
+        int size = (cond.size() == null || cond.size() < 0) ? 20 : cond.size();
+        int offset = page * size;
+
+        PostSearchCondition fixed = new PostSearchCondition(
+                cond.keyword(),
+                cond.tag(),
+                cond.category(),
+                cond.sort(),
+                page, size, offset
+        );
+
+        List<CommunityPost> posts = postDao.search(fixed);
         List<PostSummaryResponse> result = new ArrayList<>();
 
         for (CommunityPost p : posts) {
