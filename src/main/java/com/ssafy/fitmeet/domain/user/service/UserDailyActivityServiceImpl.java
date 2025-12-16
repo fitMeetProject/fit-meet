@@ -18,7 +18,7 @@ public class UserDailyActivityServiceImpl implements UserDailyActivityService {
     private final UserDailyActivityDao userDailyActivityDao;
 
     /**
-     * 해당 날짜에 "식단 기록이 존재하게 되었을 때" 호출
+     * 해당 날짜에 식단 기록이 존재하게 되었을 때 호출
      * - diet 생성 시 호출
      * - diet 수정으로 날짜가 변경될 때, 새 날짜에 대해 호출
      */
@@ -58,6 +58,54 @@ public class UserDailyActivityServiceImpl implements UserDailyActivityService {
 
         activity.setDietLogged(false);
         userDailyActivityDao.update(activity);
+    }
+
+    @Override
+    @Transactional
+    public void markWorkoutLogged(Long userId, LocalDate date) {
+        UserDailyActivity activity = userDailyActivityDao.findByUserAndDate(userId, date);
+
+        if (activity == null) {
+            activity = UserDailyActivity.builder()
+                    .userId(userId)
+                    .date(date)
+                    .dietLogged(false)
+                    .workoutLogged(true)
+                    .challengeDone(false)
+                    .build();
+            userDailyActivityDao.insert(activity);
+        } else {
+            if (Boolean.TRUE.equals(activity.getWorkoutLogged())) {
+                return;
+            }
+            activity.setWorkoutLogged(true);
+            userDailyActivityDao.update(activity);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void unmarkWorkoutLogged(Long userId, LocalDate date) {
+        UserDailyActivity activity = userDailyActivityDao.findByUserAndDate(userId, date);
+        if (activity == null) return;
+
+        activity.setWorkoutLogged(false);
+        userDailyActivityDao.update(activity);
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isDietLogged(Long userId, LocalDate date) {
+        UserDailyActivity activity = userDailyActivityDao.findByUserAndDate(userId, date);
+        return activity != null && Boolean.TRUE.equals(activity.getDietLogged());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isWorkoutLogged(Long userId, LocalDate date) {
+        UserDailyActivity activity = userDailyActivityDao.findByUserAndDate(userId, date);
+        return activity != null && Boolean.TRUE.equals(activity.getWorkoutLogged());
     }
 
     /**

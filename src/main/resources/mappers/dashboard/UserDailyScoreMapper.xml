@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.fitmeet.domain.dashboard.dao.UserDailyScoreDao">
+
+    <resultMap id="UserDailyScoreMap" type="com.ssafy.fitmeet.domain.dashboard.entity.UserDailyScore">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="date" column="date"/>
+        <result property="score" column="score"/>
+        <result property="grade" column="grade"/>
+        <result property="feedback" column="feedback"/>
+        <result property="dailyKcal" column="daily_kcal"/>
+        <result property="totalKcal" column="total_kcal"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByUserAndDate" resultMap="UserDailyScoreMap">
+        SELECT *
+        FROM user_daily_score
+        WHERE user_id = #{userId}
+        AND date = #{date}
+    </select>
+
+    <select id="findByUserAndDateRange" resultMap="UserDailyScoreMap">
+        SELECT *
+        FROM user_daily_score
+        WHERE user_id = #{userId}
+        AND date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY date ASC
+    </select>
+
+    <insert id="upsert" parameterType="com.ssafy.fitmeet.domain.dashboard.entity.UserDailyScore">
+        INSERT INTO user_daily_score (
+        user_id, date, score, grade, feedback, daily_kcal, total_kcal
+        ) VALUES (
+        #{userId}, #{date}, #{score}, #{grade}, #{feedback}, #{dailyKcal}, #{totalKcal}
+        )
+        ON DUPLICATE KEY UPDATE
+        score = VALUES(score),
+        grade = VALUES(grade),
+        feedback = VALUES(feedback),
+        daily_kcal = VALUES(daily_kcal),
+        total_kcal = VALUES(total_kcal),
+        updated_at = CURRENT_TIMESTAMP
+    </insert>
+
+</mapper>

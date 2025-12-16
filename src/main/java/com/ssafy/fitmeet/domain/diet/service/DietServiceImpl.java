@@ -10,7 +10,9 @@ import com.ssafy.fitmeet.domain.diet.entity.DietScore;
 import com.ssafy.fitmeet.domain.meal.entity.Meal;
 import com.ssafy.fitmeet.domain.meal.entity.MealNutrition;
 import com.ssafy.fitmeet.domain.meal.service.MealService;
+import com.ssafy.fitmeet.domain.user.entity.UserBodyInfo;
 import com.ssafy.fitmeet.domain.user.service.UserDailyActivityService;
+import com.ssafy.fitmeet.domain.user.service.UserService;
 import com.ssafy.fitmeet.global.error.CustomException;
 import com.ssafy.fitmeet.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ public class DietServiceImpl implements DietService {
     private final DietInfoDao dietInfoDao;
     private final DietScoreDao dietScoreDao;
     private final MealService mealService;
+    private final UserService userService;
 
     private final UserDailyNutritionService userDailyNutritionService;
     private final UserDailyActivityService userDailyActivityService;
@@ -123,6 +126,7 @@ public class DietServiceImpl implements DietService {
         }
 
         applyTotalNutritionAndUpdateDiet(diet, dietInfos);
+        recalcAndUpsertDietScore(userId, diet.getId());
 
         // 하루 영양소 집계 업데이트
         LocalDate localDate = diet.getDate().toLocalDate();
@@ -255,6 +259,7 @@ public class DietServiceImpl implements DietService {
         }
 
         applyTotalNutritionAndUpdateDiet(diet, dietInfos);
+        recalcAndUpsertDietScore(userId, dietId);
 
         LocalDate newDate = diet.getDate().toLocalDate();
 
@@ -347,6 +352,7 @@ public class DietServiceImpl implements DietService {
         LocalDate date = diet.getDate().toLocalDate();
 
         dietDao.softDelete(dietId);
+        dietScoreDao.deleteByDietId(dietId);
 
         // 하루 영양소 집계 재계산
         userDailyNutritionService.recalcDailyNutrition(userId, date);
@@ -371,6 +377,30 @@ public class DietServiceImpl implements DietService {
             return dietScore;
         }
     }
+
+    private void recalcAndUpsertDietScore(Long userId, Long dietId) {
+        Diet diet = dietDao.findById(dietId);
+        if (diet == null) return;
+
+        UserBodyInfo bodyInfo = null;
+        try {
+            bodyInfo = userService.findByUserId(userId);
+        } catch (Exception ignored) {
+            // 신체정보가 아직 없는 유저면 null로 처리
+        }
+
+        var result = com.ssafy.fitmeet.domain.diet.service.score.DietScoreCalculator.calculate(diet, bodyInfo);
+
+        DietScore score = DietScore.builder()
+                .dietId(dietId)
+                .score(result.score())
+                .grade(result.grade())
+                .feedback(result.feedback())
+                .build();
+
+        saveOrUpdateDietScore(score);
+    }
+
 
     @Override
     public DietScore getDietScore(Long dietId) {

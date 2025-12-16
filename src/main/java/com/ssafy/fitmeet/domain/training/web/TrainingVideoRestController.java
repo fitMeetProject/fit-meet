@@ -50,15 +50,16 @@ public class TrainingVideoRestController {
     }
 
     @PostMapping("/{id}/complete")
-    @Operation(summary = "운동 영상 완료 처리", description = "유저가 특정 운동 영상을 완료했을 때 기록")
-    public ResponseEntity<Response<?>> completeVideo(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable("id") Long videoId, @RequestBody(required = false) CompleteVideoRequest request) {
+    @Operation(summary = "운동 영상 완료 토글", description = "유저가 특정 운동 영상을 완료/취소 토글")
+    public ResponseEntity<Response<?>> toggleComplete(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable("id") Long videoId, @RequestBody(required = false) CompleteVideoRequest request) {
         Long userId = userDetails.getId();
         Integer durationSec = (request != null) ? request.durationSec() : null;
         String memo = (request != null) ? request.memo() : null;
 
-        trainingVideoService.completeVideo(userId, videoId, durationSec, memo);
-        return ResponseEntity.ok(ResponseUtil.ok(null));
+        boolean completed = trainingVideoService.toggleComplete(userId, videoId, durationSec, memo);
+        return ResponseEntity.ok(ResponseUtil.ok(completed));
     }
+
 
     @GetMapping("/history/today")
     @Operation(summary = "오늘 완료한 운동영상 목록", description = "현재 로그인 유저가 오늘 완료한 운동영상 목록 조회 (커뮤니티)")

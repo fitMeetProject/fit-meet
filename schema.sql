@@ -127,8 +127,31 @@ CREATE TABLE `diet_score` (
                                   FOREIGN KEY (`diet_id`) REFERENCES `diet`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- 식단 정보 테이블
-DROP TABLE IF EXISTS `diet_info`;
+DROP TABLE IF EXISTS `user_daily_score`;
+CREATE TABLE `user_daily_score` (
+                                    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                                    `user_id` BIGINT UNSIGNED NOT NULL,
+                                    `date` DATE NOT NULL, -- YYYY-MM-DD (하루 단위)
+                                    `score` INT NOT NULL DEFAULT 0, -- 0~100
+                                    `grade` CHAR(1) DEFAULT NULL, -- A~E
+                                    `feedback` VARCHAR(255) DEFAULT NULL,
+
+                                    -- 계산 기준 스냅샷
+                                    `daily_kcal` INT DEFAULT NULL, -- 당시 dailyKcal
+                                    `total_kcal` DECIMAL(8,3) DEFAULT 0,
+
+                                    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+                                    UNIQUE KEY `uk_user_date` (`user_id`, `date`),
+                                    KEY `idx_user_date` (`user_id`, `date`),
+
+                                    CONSTRAINT `fk_user_daily_score_user`
+                                        FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
+  ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+  -- 식단 정보 테이블
+  DROP TABLE IF EXISTS `diet_info`;
 CREATE TABLE `diet_info` (
                              `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, -- 기본키 (PK)
                              `diet_id` BIGINT UNSIGNED NOT NULL, -- 식단 ID (FK)

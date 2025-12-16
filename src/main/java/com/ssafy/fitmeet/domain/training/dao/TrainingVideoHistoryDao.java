@@ -17,4 +17,7 @@ public interface TrainingVideoHistoryDao {
     int updateHistory(TrainingVideoHistory history);
 
     List<TrainingVideoHistory> findByUserAndDate(@Param("userId") Long userId, @Param("activityDate") LocalDate activityDate);
+
+    int countCompletedByUserAndDate(Long userId, LocalDate activityDate);
+
 }

@@ -9,6 +9,7 @@ import com.ssafy.fitmeet.domain.training.entity.TrainingVideoComment;
 import com.ssafy.fitmeet.domain.training.entity.TrainingVideoHistory;
 import com.ssafy.fitmeet.domain.user.dao.UserDao;
 import com.ssafy.fitmeet.domain.user.entity.User;
+import com.ssafy.fitmeet.domain.user.service.UserDailyActivityService;
 import com.ssafy.fitmeet.global.error.CustomException;
 import com.ssafy.fitmeet.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,8 @@ public class TrainingVideoServiceImpl implements TrainingVideoService {
     private final TrainingVideoDao trainingVideoDao;
     private final TrainingVideoHistoryDao trainingVideoHistoryDao;
     private final TrainingVideoCommentDao trainingVideoCommentDao;
+    private final UserDailyActivityService userDailyActivityService;
+
     private final UserDao userDao;
 
     @Override
@@ -120,7 +123,66 @@ public class TrainingVideoServiceImpl implements TrainingVideoService {
             history.setMemo(memo);
             trainingVideoHistoryDao.updateHistory(history);
         }
+
+        userDailyActivityService.markWorkoutLogged(userId, today);
     }
+
+    @Override
+    @Transactional
+    public boolean toggleComplete(Long userId, Long videoId, Integer durationSec, String memo) {
+
+        TrainingVideo video = trainingVideoDao.findById(videoId);
+        if (video == null) {
+            throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
+        }
+
+        LocalDate today = LocalDate.now();
+        TrainingVideoHistory history = trainingVideoHistoryDao.findByUserAndVideoAndDate(userId, videoId, today);
+
+        boolean nowCompleted;
+
+        // 1. 오늘 히스토리 row가 없으면 새로 생성하고 완료=1
+        if (history == null) {
+            history = TrainingVideoHistory.builder()
+                    .userId(userId)
+                    .videoId(videoId)
+                    .activityDate(today)
+                    .completed(1)
+                    .durationSec(durationSec)
+                    .memo(memo)
+                    .build();
+            trainingVideoHistoryDao.insertHistory(history);
+            nowCompleted = true;
+
+        } else {
+            // 2. 있으면 completed를 토글
+            int current = (history.getCompleted() != null) ? history.getCompleted() : 0;
+            int next = (current == 1) ? 0 : 1;
+
+            history.setCompleted(next);
+
+            // 완료로 바뀌는 경우에만 duration/memo 갱신
+            if (next == 1) {
+                history.setDurationSec(durationSec);
+                history.setMemo(memo);
+            }
+
+            trainingVideoHistoryDao.updateHistory(history);
+            nowCompleted = (next == 1);
+        }
+
+        // 3. 오늘 날짜 기준 "완료한 운동"이 하나라도 있으면 workoutLogged=true
+        int completedCount = trainingVideoHistoryDao.countCompletedByUserAndDate(userId, today);
+
+        if (completedCount > 0) {
+            userDailyActivityService.markWorkoutLogged(userId, today);
+        } else {
+            userDailyActivityService.unmarkWorkoutLogged(userId, today);
+        }
+
+        return nowCompleted;
+    }
+
 
     @Override
     @Transactional(readOnly = true)

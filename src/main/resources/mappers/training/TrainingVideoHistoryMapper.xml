@@ -54,4 +54,13 @@
         AND completed = 1
     </select>
 
+    <select id="countCompletedByUserAndDate" resultType="int">
+        SELECT COUNT(*)
+        FROM training_video_history
+        WHERE user_id = #{userId}
+        AND activity_date = #{activityDate}
+        AND completed = 1
+    </select>
+
+
 </mapper>

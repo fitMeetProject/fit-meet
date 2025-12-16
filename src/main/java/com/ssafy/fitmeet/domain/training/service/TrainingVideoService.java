@@ -27,6 +27,11 @@ public interface TrainingVideoService {
     void completeVideo(Long userId, Long videoId, Integer durationSec, String memo);
 
     /**
+     * 운동 완료/취소 토글
+     */
+    boolean toggleComplete(Long userId, Long videoId, Integer durationSec, String memo);
+
+    /**
      * 오늘 운동한 영상 목록 가져오기
      */
     List<TodayVideoResponse> getTodayCompletedVideos(Long userId);
