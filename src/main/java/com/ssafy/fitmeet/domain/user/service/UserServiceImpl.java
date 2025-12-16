@@ -117,11 +117,10 @@ public class UserServiceImpl implements UserService{
     	User user = getUserInfoEmail(email);
 
         // 닉네임 변경
-        user.setName(request.name());
         user.setNickname(request.nickname());
         user.setUpdatedAt(LocalDateTime.now());
 
-        userDao.updateProfileBasic(user.getId(), request.name(), request.nickname());
+        userDao.updateProfileBasic(user.getId(), request.nickname());
 
         UserBodyInfo bodyInfo = userBodyInfoDao.findByUserId(user.getId());
         if (bodyInfo == null) {

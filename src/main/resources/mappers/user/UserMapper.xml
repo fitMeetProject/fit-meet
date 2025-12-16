@@ -57,7 +57,6 @@
     <update id="updateProfileBasic">
         UPDATE `user`
         SET
-        name = #{name},
         nickname = #{nickname},
         updated_at = NOW()
         WHERE id = #{id}

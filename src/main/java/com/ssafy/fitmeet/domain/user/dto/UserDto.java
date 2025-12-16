@@ -9,7 +9,6 @@ public class UserDto {
 
     // 프로필 + 신체 정보 수정 요청
     public record UpdateProfileRequest(
-            String name,
             String nickname,
             Double heightCm,
             Double weightKg,

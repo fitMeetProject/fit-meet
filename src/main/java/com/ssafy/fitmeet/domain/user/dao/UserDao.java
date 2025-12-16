@@ -19,7 +19,7 @@ public interface UserDao {
     int insertUser(User user);
 
     // 회원 정보 수정
-    int updateProfileBasic(@Param("id") Long id, @Param("name") String name, @Param("nickname") String nickname);
+    int updateProfileBasic(@Param("id") Long id, @Param("nickname") String nickname);
 
     // 마지막 로그인시간
     int updateLastLogin(@Param("id") Long id, @Param("lastLoginAt") LocalDateTime lastLoginAt);
