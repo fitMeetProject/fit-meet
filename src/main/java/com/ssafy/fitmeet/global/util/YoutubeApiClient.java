@@ -43,7 +43,7 @@ public class YoutubeApiClient {
                         + "&regionCode=KR"
                         + "&relevanceLanguage=ko"
                         + "&maxResults=" + maxResults
-                        + "&q=" + enc(query)
+                        + "&q=" + query
                         + "&key=" + apiKey;
 
         log.info("search url: {}", url);
@@ -57,7 +57,7 @@ public class YoutubeApiClient {
 
         String url = normalizeBaseUrl() + "playlistItems"
                         + "?part=contentDetails"
-                        + "&playlistId=" + enc(playlistId)
+                        + "&playlistId=" + playlistId
                         + "&maxResults=" + maxResults
                         + "&key=" + apiKey;
 
