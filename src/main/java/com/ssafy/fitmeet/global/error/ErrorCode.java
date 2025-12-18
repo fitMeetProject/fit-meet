@@ -53,6 +53,14 @@ public enum ErrorCode {
     // 6000번대 : 운동영상 관련
     RESOURCE_NOT_FOUND(6001, HttpStatus.BAD_REQUEST, "영상 정보가 없습니다."),
 
+    // 7000번대: AI / 외부 API
+    AI_RATE_LIMITED(7001, HttpStatus.TOO_MANY_REQUESTS, "AI 요청이 많아 잠시 후 다시 시도해주세요."),
+    AI_TIMEOUT(7002, HttpStatus.GATEWAY_TIMEOUT, "AI 응답 시간이 초과되었습니다."),
+    AI_UPSTREAM_AUTH_FAILED(7003, HttpStatus.BAD_GATEWAY, "AI 연동 인증에 실패했습니다."),
+    AI_INVALID_REQUEST(7004, HttpStatus.BAD_REQUEST, "AI 요청 형식이 올바르지 않습니다."),
+    AI_INVALID_RESPONSE(7005, HttpStatus.BAD_GATEWAY, "AI 응답 형식이 올바르지 않습니다."),
+    AI_UPSTREAM_ERROR(7006, HttpStatus.BAD_GATEWAY, "AI 서버 오류가 발생했습니다."),
+
     // 8000번대: DB 관련
     DB_DUPLICATE_KEY(8001, HttpStatus.CONFLICT, "이미 존재하는 데이터입니다."),
     DB_ERROR(8002, HttpStatus.INTERNAL_SERVER_ERROR, "데이터베이스 오류가 발생했습니다."),
