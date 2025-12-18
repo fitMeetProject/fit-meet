@@ -155,7 +155,7 @@ CREATE TABLE `user_daily_score` (
 CREATE TABLE `diet_info` (
                              `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, -- 기본키 (PK)
                              `diet_id` BIGINT UNSIGNED NOT NULL, -- 식단 ID (FK)
-                             `meal_id` BIGINT UNSIGNED NOT NULL, -- 음식 마스터 ID (meal.id)
+                             `meal_id` BIGINT UNSIGNED NULL, -- 음식 마스터 ID (meal.id)
                              `food_nm_kr` VARCHAR(100) NOT NULL, -- 음식 이름 (한글)
                              `food_code` VARCHAR(50) DEFAULT NULL, -- 공공데이터/내부 음식 코드
                              `source_type` VARCHAR(20) NOT NULL DEFAULT 'PUBLIC_API', -- ( PUBLIC_API / MANUAL / MODEL 등 )
