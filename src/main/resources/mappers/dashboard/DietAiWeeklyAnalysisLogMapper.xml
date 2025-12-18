@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.fitmeet.domain.dashboard.dao.DietAiWeeklyAnalysisLogDao">
+
+    <insert id="insert" parameterType="com.ssafy.fitmeet.domain.dashboard.entity.DietAiWeeklyAnalysisLog">
+        INSERT INTO diet_ai_weekly_analysis_log
+        (user_id, start_date, end_date,
+        request_system_prompt, request_user_prompt,
+        response_json, weekly_score, status, error_message,
+        created_at, updated_at)
+        VALUES
+        (#{userId}, #{startDate}, #{endDate},
+        #{requestSystemPrompt}, #{requestUserPrompt},
+        #{responseJson}, #{weeklyScore}, #{status}, #{errorMessage},
+        #{createdAt}, #{updatedAt})
+    </insert>
+
+    <select id="findLatestSuccess" resultType="com.ssafy.fitmeet.domain.dashboard.entity.DietAiWeeklyAnalysisLog">
+        SELECT *
+        FROM diet_ai_weekly_analysis_log
+        WHERE user_id = #{userId}
+        AND end_date = #{endDate}
+        AND status = 'SUCCESS'
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
+
+</mapper>

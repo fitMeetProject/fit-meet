@@ -3,6 +3,7 @@ package com.ssafy.fitmeet.domain.dashboard.web;
 import com.ssafy.fitmeet.domain.dashboard.dto.DashboardDto.*;
 import com.ssafy.fitmeet.domain.dashboard.entity.UserDailyScore;
 import com.ssafy.fitmeet.domain.dashboard.service.UserDailyScoreService;
+import com.ssafy.fitmeet.domain.dashboard.service.ai.DashboardAiAnalysisService;
 import com.ssafy.fitmeet.domain.diet.entity.UserDailyNutrition;
 import com.ssafy.fitmeet.domain.diet.service.UserDailyNutritionService;
 import com.ssafy.fitmeet.domain.user.entity.UserBodyInfo;
@@ -16,10 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -39,6 +37,7 @@ public class DashboardRestController {
     private final UserService userService;
     private final UserDailyNutritionService userDailyNutritionService;
     private final UserDailyScoreService userDailyScoreService;
+    private final DashboardAiAnalysisService dashboardAiAnalysisService;
 
     /**
      * 오늘 요약 (대시보드 상단 카드용)
@@ -191,4 +190,13 @@ public class DashboardRestController {
         NutritionRangeResponse dto = new NutritionRangeResponse(startDate, endDate, items);
         return ResponseEntity.ok(ResponseUtil.ok(dto));
     }
+
+    @PostMapping("/ai-weekly")
+    @Operation(summary = "AI 주간 분석", description = "endDate 기준 최근 7일 식단/점수/신체정보 종합 분석 및 추천")
+    public ResponseEntity<Response<WeeklyAiAnalysisResponse>> analyzeWeeklyAi(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        Long userId = userDetails.getId();
+        WeeklyAiAnalysisResponse dto = dashboardAiAnalysisService.analyzeWeekly(userId, endDate);
+        return ResponseEntity.ok(ResponseUtil.ok(dto));
+    }
+
 }
