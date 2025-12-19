@@ -10,7 +10,7 @@ import com.ssafy.fitmeet.domain.diet.entity.UserDailyNutrition;
 import com.ssafy.fitmeet.domain.diet.service.UserDailyNutritionService;
 import com.ssafy.fitmeet.domain.user.entity.UserBodyInfo;
 import com.ssafy.fitmeet.domain.user.service.UserService;
-import com.ssafy.fitmeet.global.config.ai.OpenAiChatClient;
+import com.ssafy.fitmeet.global.config.ai.OpenAiClient;
 import com.ssafy.fitmeet.global.error.CustomException;
 import com.ssafy.fitmeet.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class DashboardAiAnalysisServiceImpl implements DashboardAiAnalysisServic
     private final UserDailyNutritionService userDailyNutritionService;
     private final UserDailyScoreService userDailyScoreService;
 
-    private final OpenAiChatClient openAiChatClient;
+    private final OpenAiClient openAiClient;
     private final WeeklyAiPromptBuilder promptBuilder;
     private final ObjectMapper objectMapper;
 
@@ -92,7 +92,7 @@ public class DashboardAiAnalysisServiceImpl implements DashboardAiAnalysisServic
         String errorMessage = null;
 
         try {
-            rawJson = openAiChatClient.chat(systemPrompt, userPrompt);
+            rawJson = openAiClient.chat(systemPrompt, userPrompt);
 
             if (rawJson == null || rawJson.trim().equals("{}")) {
                 throw new CustomException(ErrorCode.AI_INVALID_RESPONSE, "빈 JSON 응답({})이 반환되었습니다.");

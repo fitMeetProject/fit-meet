@@ -91,7 +91,14 @@
 			<version>${jjwt.version}</version>
 			<scope>runtime</scope>
 		</dependency>
-		
+
+		<!-- AWS SDK v1 : S3 (Presigned URL 포함) -->
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-s3</artifactId>
+			<version>1.12.681</version>
+		</dependency>
+
 		<!-- Log4j2 -->
 	    <dependency>
 	        <groupId>org.springframework.boot</groupId>

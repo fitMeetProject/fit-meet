@@ -22,7 +22,8 @@ public class OpenAiConfig {
 
     @Bean
     public WebClient openAiWebClient() {
-        HttpClient httpClient = HttpClient.create().responseTimeout(Duration.ofSeconds(25));
+        HttpClient httpClient = HttpClient.create().responseTimeout(Duration.ofSeconds(30));
+
         return WebClient.builder()
                 .baseUrl(baseUrl)
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
