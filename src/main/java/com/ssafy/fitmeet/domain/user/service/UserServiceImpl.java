@@ -257,8 +257,13 @@ public class UserServiceImpl implements UserService{
     public ProfileImageResponse getProfileImage() {
         String email = getCurrentUserEmail();
         User user = getUserInfoEmail(email);
-        return ProfileImageResponse.of(user);
+
+        UserBodyInfo bodyInfo = userBodyInfoDao.findByUserId(user.getId());
+        boolean hasBodyInfo = bodyInfo != null;
+
+        return ProfileImageResponse.of(user, hasBodyInfo);
     }
+
 
     @Override
     @Transactional

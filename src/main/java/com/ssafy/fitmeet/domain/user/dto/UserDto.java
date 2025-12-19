@@ -65,12 +65,14 @@ public class UserDto {
 
     public record ProfileImageResponse(
             String nickname,
-            String profileImageUrl
+            String profileImageUrl,
+            boolean bodyInfoVal
     ) {
-        public static ProfileImageResponse of(User user) {
+        public static ProfileImageResponse of(User user, boolean bodyInfoVal) {
             return new ProfileImageResponse(
                     user.getNickname(),
-                    user.getProfileImageUrl()
+                    user.getProfileImageUrl(),
+                    bodyInfoVal
             );
         }
     }
