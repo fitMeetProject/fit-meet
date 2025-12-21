@@ -62,8 +62,6 @@ public class UserDailyScoreServiceImpl implements UserDailyScoreService {
         // 6) upsert
         userDailyScoreDao.upsert(score);
 
-        // 7) 반환은 DB 재조회해도 되고, 지금 객체 그대로 반환해도 무방
-        //    (id가 필요하면 재조회 권장)
         return userDailyScoreDao.findByUserAndDate(userId, date);
     }
 

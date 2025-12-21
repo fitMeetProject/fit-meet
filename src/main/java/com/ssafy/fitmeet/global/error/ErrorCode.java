@@ -64,6 +64,7 @@ public enum ErrorCode {
     // 8000번대: DB 관련
     DB_DUPLICATE_KEY(8001, HttpStatus.CONFLICT, "이미 존재하는 데이터입니다."),
     DB_ERROR(8002, HttpStatus.INTERNAL_SERVER_ERROR, "데이터베이스 오류가 발생했습니다."),
+    DB_DATA_NOT_FOUND(8003, HttpStatus.NOT_FOUND, "요청한 데이터가 존재하지 않습니다."),
 
     // 9000번대: 서버/기타
     INTERNAL_SERVER_ERROR(9000, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다.");
