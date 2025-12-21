@@ -24,17 +24,6 @@ public class OpenAiClient {
     @Value("${open-api.gpt.model}")
     private String model;
 
-    public String chatRaw(Object requestBody) {
-        return openAiWebClient.post()
-                .uri("/chat/completions")
-                .bodyValue(requestBody)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, this::mapToCustomException)
-                .bodyToMono(String.class)
-                .retryWhen(retrySpecForTransientErrors())
-                .block();
-    }
-
     public String responsesText(Map<String, Object> requestBody) {
         OpenAiDto.OpenAiResponse res = openAiWebClient.post()
                 .uri("/responses")

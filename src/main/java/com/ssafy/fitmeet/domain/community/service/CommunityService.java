@@ -16,13 +16,15 @@ public interface CommunityService {
 
     PostDetailResponse getPostDetail(Long currentUserId, Long postId, boolean isCreate);
 
-    List<PostSummaryResponse> searchPosts(Long currentUserId, PostSearchCondition condition);
+    PostPageResponse searchPosts(Long currentUserId, PostSearchCondition condition);
 
     void likePost(Long userId, Long postId);
 
     void unlikePost(Long userId, Long postId);
 
-    List<PostSummaryResponse> getMyLikedPosts(Long userId);
+    PostPageResponse getMyLikedPosts(Long userId, Integer page, Integer size);
+
+    PostPageResponse getMyPosts(Long userId, Integer page, Integer size);
 
     Long addComment(Long userId, Long postId, CommentCreateRequest request);
 

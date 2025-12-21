@@ -293,5 +293,4 @@ public class UserServiceImpl implements UserService{
         user.setProfileImageUrl(null);
     }
 
-
 }

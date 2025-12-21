@@ -47,6 +47,22 @@ public class CommunityDto {
             Integer offset
     ) {}
 
+    public record PostPageResponse(
+            List<PostSummaryResponse> content,
+            int page,
+            int size,
+            long totalElements,
+            int totalPages,
+            boolean hasNext
+    ) {
+        public static PostPageResponse of(List<PostSummaryResponse> content, int page, int size, long totalElements) {
+            int totalPages = (int) Math.ceil((double) totalElements / size);
+            boolean hasNext = page + 1 < totalPages;
+            return new PostPageResponse(content, page, size, totalElements, totalPages, hasNext);
+        }
+    }
+
+
     // 게시글 목록용 요약 응답
     public record PostSummaryResponse(
             Long id,

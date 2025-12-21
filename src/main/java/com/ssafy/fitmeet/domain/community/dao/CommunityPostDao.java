@@ -16,6 +16,8 @@ public interface CommunityPostDao {
 
     CommunityPost findById(@Param("id") Long id);
 
+    List<CommunityPost> findByUserId(@Param("userId") Long userId, @Param("size") int size, @Param("offset") int offset);
+
     int softDelete(@Param("postId") Long postId, @Param("userId") Long userId);
 
     int restore(@Param("postId") Long postId, @Param("userId") Long userId);
@@ -28,5 +30,16 @@ public interface CommunityPostDao {
 
     List<CommunityPost> search(PostSearchCondition condition);
 
-    List<CommunityPost> findLikedPostsByUser(@Param("userId") Long userId);
+    List<CommunityPost> findLikedPostsByUser(@Param("userId") Long userId, @Param("size") int size, @Param("offset") int offset);
+
+    long countSearch(PostSearchCondition cond);
+
+    long countByUserId(@Param("userId") Long userId);
+
+    long countLikedPostsByUser(@Param("userId") Long userId);
+
+    List<CommunityPost> findByUserIdPaged(@Param("userId") Long userId, @Param("size") int size, @Param("offset") int offset);
+
+    List<CommunityPost> findLikedPostsByUserPaged(@Param("userId") Long userId, @Param("size") int size, @Param("offset") int offset);
+
 }

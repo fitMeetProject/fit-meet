@@ -50,6 +50,15 @@
         WHERE `id` = #{id}
     </select>
 
+    <select id="findByUserId" resultMap="CommunityPostMap">
+        SELECT *
+        FROM `community_post`
+        WHERE `user_id` = #{userId}
+        AND `is_deleted` = 0
+        ORDER BY `created_at` DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
     <update id="update">
         UPDATE `community_post`
         SET `title` = #{title},
@@ -142,6 +151,29 @@
         </if>
     </select>
 
+    <select id="countSearch" resultType="long">
+        SELECT COUNT(DISTINCT p.id)
+        FROM `community_post` p
+        <if test="tag != null and tag != ''">
+            JOIN `community_post_tag` pt ON p.id = pt.post_id
+            JOIN `community_tag` t ON pt.tag_id = t.id
+        </if>
+        WHERE p.is_deleted = 0
+
+        <if test="keyword != null and keyword != ''">
+            AND (p.title LIKE CONCAT('%', #{keyword}, '%')
+            OR p.content LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+
+        <if test="category != null and category != ''">
+            AND p.category = #{category}
+        </if>
+
+        <if test="tag != null and tag != ''">
+            AND t.name = #{tag}
+        </if>
+    </select>
+
     <select id="findLikedPostsByUser" resultMap="CommunityPostMap">
         SELECT p.*
         FROM `community_post_like` l
@@ -149,6 +181,42 @@
         WHERE l.user_id = #{userId}
         AND p.is_deleted = 0
         ORDER BY l.created_at DESC
+        LIMIT #{size} OFFSET #{offset}
     </select>
+
+    <select id="countByUserId" resultType="long">
+        SELECT COUNT(*)
+        FROM `community_post`
+        WHERE `user_id` = #{userId}
+        AND `is_deleted` = 0
+    </select>
+
+    <select id="countLikedPostsByUser" resultType="long">
+        SELECT COUNT(*)
+        FROM `community_post_like` l
+        JOIN `community_post` p ON l.post_id = p.id
+        WHERE l.user_id = #{userId}
+        AND p.is_deleted = 0
+    </select>
+
+    <select id="findByUserIdPaged" resultMap="CommunityPostMap">
+        SELECT *
+        FROM `community_post`
+        WHERE `user_id` = #{userId}
+        AND `is_deleted` = 0
+        ORDER BY `created_at` DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="findLikedPostsByUserPaged" resultMap="CommunityPostMap">
+        SELECT p.*
+        FROM `community_post_like` l
+        JOIN `community_post` p ON l.post_id = p.id
+        WHERE l.user_id = #{userId}
+        AND p.is_deleted = 0
+        ORDER BY l.created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
 
 </mapper>

@@ -36,6 +36,14 @@ public class CommunityServiceImpl implements CommunityService {
     private final UserDailyActivityService userDailyActivityService;
     private final UserDailyNutritionService userDailyNutritionService;
 
+    private int normalizePage(Integer page) {
+        return (page == null || page < 0) ? 0 : page;
+    }
+
+    private int normalizeSize(Integer size) {
+        return (size == null || size < 1) ? 20 : size;
+    }
+
     @Override
     @Transactional
     public Long createPost(Long userId, PostCreateRequest request) {
@@ -359,9 +367,9 @@ public class CommunityServiceImpl implements CommunityService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<PostSummaryResponse> searchPosts(Long currentUserId, PostSearchCondition cond) {
-        int page = (cond.page() == null || cond.page() < 0) ? 0 : cond.page();
-        int size = (cond.size() == null || cond.size() < 0) ? 20 : cond.size();
+    public PostPageResponse searchPosts(Long currentUserId, PostSearchCondition cond) {
+        int page = normalizePage(cond.page());
+        int size = normalizeSize(cond.size());
         int offset = page * size;
 
         PostSearchCondition fixed = new PostSearchCondition(
@@ -372,25 +380,23 @@ public class CommunityServiceImpl implements CommunityService {
                 page, size, offset
         );
 
+        long totalElements = postDao.countSearch(fixed);
         List<CommunityPost> posts = postDao.search(fixed);
-        List<PostSummaryResponse> result = new ArrayList<>();
 
+        List<PostSummaryResponse> content = new ArrayList<>();
         for (CommunityPost p : posts) {
             boolean likedByMe = false;
             if (currentUserId != null) {
-                Boolean exists = likeDao.exists(p.getId(), currentUserId);
-                likedByMe = Boolean.TRUE.equals(exists);
+                likedByMe = Boolean.TRUE.equals(likeDao.exists(p.getId(), currentUserId));
             }
 
             User writer = userService.getUserById(p.getUserId());
             List<String> tags = postTagDao.findTagsByPostId(p.getId());
 
             String preview = p.getContent();
-            if (preview != null && preview.length() > 100) {
-                preview = preview.substring(0, 100) + "...";
-            }
+            if (preview != null && preview.length() > 100) preview = preview.substring(0, 100) + "...";
 
-            result.add(new PostSummaryResponse(
+            content.add(new PostSummaryResponse(
                     p.getId(),
                     p.getTitle(),
                     preview,
@@ -410,46 +416,96 @@ public class CommunityServiceImpl implements CommunityService {
             ));
         }
 
-        return result;
+        return PostPageResponse.of(content, page, size, totalElements);
     }
+
 
     @Override
     @Transactional(readOnly = true)
-    public List<PostSummaryResponse> getMyLikedPosts(Long userId) {
-        List<CommunityPost> posts = postDao.findLikedPostsByUser(userId);
-        List<PostSummaryResponse> result = new ArrayList<>();
+    public PostPageResponse getMyLikedPosts(Long userId, Integer page, Integer size) {
+        int p = normalizePage(page);
+        int s = normalizeSize(size);
+        int offset = p * s;
 
-        for (CommunityPost p : posts) {
-            User writer = userService.getUserById(p.getUserId());
-            List<String> tags = postTagDao.findTagsByPostId(p.getId());
+        long totalElements = postDao.countLikedPostsByUser(userId);
+        List<CommunityPost> posts = postDao.findLikedPostsByUserPaged(userId, s, offset);
 
-            String preview = p.getContent();
-            if (preview != null && preview.length() > 100) {
-                preview = preview.substring(0, 100) + "...";
-            }
+        List<PostSummaryResponse> content = new ArrayList<>();
+        for (CommunityPost post : posts) {
+            User writer = userService.getUserById(post.getUserId());
+            List<String> tags = postTagDao.findTagsByPostId(post.getId());
 
-            result.add(new PostSummaryResponse(
-                    p.getId(),
-                    p.getTitle(),
+            String preview = post.getContent();
+            if (preview != null && preview.length() > 100) preview = preview.substring(0, 100) + "...";
+
+            content.add(new PostSummaryResponse(
+                    post.getId(),
+                    post.getTitle(),
                     preview,
-                    p.getCategory(),
-                    p.getActivityDate(),
-                    p.isShareDiet(),
-                    p.isShareStreak(),
-                    p.isShareWorkout(),
-                    p.getLikeCount(),
-                    p.getViewCount(),
-                    p.getCommentCount(),
+                    post.getCategory(),
+                    post.getActivityDate(),
+                    post.isShareDiet(),
+                    post.isShareStreak(),
+                    post.isShareWorkout(),
+                    post.getLikeCount(),
+                    post.getViewCount(),
+                    post.getCommentCount(),
                     true,
                     tags,
                     writer.getNickname(),
                     writer.getProfileImageUrl(),
-                    p.getCreatedAt()
+                    post.getCreatedAt()
             ));
         }
 
-        return result;
+        return PostPageResponse.of(content, p, s, totalElements);
     }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public PostPageResponse getMyPosts(Long userId, Integer page, Integer size) {
+        int p = normalizePage(page);
+        int s = normalizeSize(size);
+        int offset = p * s;
+
+        long totalElements = postDao.countByUserId(userId);
+        List<CommunityPost> posts = postDao.findByUserIdPaged(userId, s, offset);
+
+        List<PostSummaryResponse> content = new ArrayList<>();
+        for (CommunityPost post : posts) {
+            boolean likedByMe = Boolean.TRUE.equals(likeDao.exists(post.getId(), userId));
+
+            User writer = userService.getUserById(post.getUserId());
+            List<String> tags = postTagDao.findTagsByPostId(post.getId());
+
+            String preview = post.getContent();
+            if (preview != null && preview.length() > 100) preview = preview.substring(0, 100) + "...";
+
+            content.add(new PostSummaryResponse(
+                    post.getId(),
+                    post.getTitle(),
+                    preview,
+                    post.getCategory(),
+                    post.getActivityDate(),
+                    post.isShareDiet(),
+                    post.isShareStreak(),
+                    post.isShareWorkout(),
+                    post.getLikeCount(),
+                    post.getViewCount(),
+                    post.getCommentCount(),
+                    likedByMe,
+                    tags,
+                    writer.getNickname(),
+                    writer.getProfileImageUrl(),
+                    post.getCreatedAt()
+            ));
+        }
+
+        return PostPageResponse.of(content, p, s, totalElements);
+    }
+
+
 
     @Override
     @Transactional(readOnly = true)
