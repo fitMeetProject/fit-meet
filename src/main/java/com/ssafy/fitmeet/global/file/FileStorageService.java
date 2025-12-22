@@ -1,16 +1,18 @@
 package com.ssafy.fitmeet.global.file;
 
-import java.io.IOException;
-import java.nio.file.*;
-import java.util.UUID;
-
+import com.ssafy.fitmeet.global.error.CustomException;
+import com.ssafy.fitmeet.global.error.ErrorCode;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.ssafy.fitmeet.global.error.CustomException;
-import com.ssafy.fitmeet.global.error.ErrorCode;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.UUID;
 
 @Service
 @Log4j2
@@ -82,6 +84,59 @@ public class FileStorageService {
 
         } catch (IOException e) {
              log.warn("프로필 이미지 파일 삭제 실패: {}", imageUrl, e);
+        }
+    }
+
+    /**
+     * 커뮤니티 이미지 저장 후 접근 가능한 URL 반환
+     */
+    public String storeCommunityPostImage(Long userId, MultipartFile file) {
+        if (file == null || file.isEmpty()) return null;
+
+        String original = file.getOriginalFilename();
+        String ext = "";
+        if (original != null && original.contains(".")) {
+            ext = original.substring(original.lastIndexOf(".")).toLowerCase();
+        }
+        if (!ext.matches("\\.(png|jpg|jpeg|webp)$")) {
+            throw new CustomException(ErrorCode.FILE_INVALID_TYPE);
+        }
+
+        try {
+            Path postDir = Paths.get(uploadDir, "community", "post")
+                    .toAbsolutePath()
+                    .normalize();
+            Files.createDirectories(postDir);
+
+            String filename = "post_user_" + userId + "_" + UUID.randomUUID() + ext;
+            Path target = postDir.resolve(filename).normalize();
+
+            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+            return baseUrl + "/static/community/post/" + filename;
+
+        } catch (IOException e) {
+            throw new CustomException(ErrorCode.FILE_UPLOAD_FAIL);
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.FILE_STORAGE_ERROR);
+        }
+    }
+
+    /**
+     * 기존 커뮤니티 이미지 파일 삭제 (URL 기준)
+     */
+    public void deleteCommunityPostImageFile(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) return;
+
+        try {
+            int idx = imageUrl.lastIndexOf("/static/");
+            if (idx == -1) return;
+
+            String relativePath = imageUrl.substring(idx + "/static/".length());
+            Path filePath = Paths.get(uploadDir).resolve(relativePath).normalize();
+            Files.deleteIfExists(filePath);
+
+        } catch (IOException e) {
+            log.warn("게시글 이미지 파일 삭제 실패: {}", imageUrl, e);
         }
     }
 }

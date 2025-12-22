@@ -10,7 +10,9 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.nio.file.AccessDeniedException;
 
@@ -39,7 +41,7 @@ public class GlobalExceptionHandler {
         log.warn("[BadCredentials] {}", e.getMessage());
         return ResponseEntity
                 .status(code.getStatus())
-                .body(ResponseUtil.error(code));
+                .body(ResponseUtil.error(code, code.getMessage()));
     }
 
     /**
@@ -51,7 +53,7 @@ public class GlobalExceptionHandler {
         log.warn("[AccessDenied] {}", e.getMessage());
         return ResponseEntity
                 .status(code.getStatus())
-                .body(ResponseUtil.error(code));
+                .body(ResponseUtil.error(code, code.getMessage()));
     }
 
     /**
@@ -81,6 +83,16 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * 파일 사이즈 초과
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<?> handleMaxSize(MaxUploadSizeExceededException e) {
+        return ResponseEntity
+                .badRequest()
+                .body("업로드 가능한 파일 크기를 초과했습니다.");
+    }
+
+    /**
      * 그 외 모든 예외
      */
     @ExceptionHandler(Exception.class)
@@ -89,7 +101,7 @@ public class GlobalExceptionHandler {
         log.error("[Exception] {}", e.getMessage(), e);
         return ResponseEntity
                 .status(code.getStatus())
-                .body(ResponseUtil.error(code));
+                .body(ResponseUtil.error(code, code.getMessage()));
     }
 }
 

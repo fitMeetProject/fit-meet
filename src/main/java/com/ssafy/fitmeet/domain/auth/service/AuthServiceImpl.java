@@ -1,7 +1,6 @@
 package com.ssafy.fitmeet.domain.auth.service;
 
 import com.ssafy.fitmeet.domain.auth.dao.UserRefreshTokenDao;
-import com.ssafy.fitmeet.domain.auth.dto.AuthDto;
 import com.ssafy.fitmeet.domain.auth.entity.UserRefreshToken;
 import com.ssafy.fitmeet.domain.user.dao.UserDao;
 import com.ssafy.fitmeet.domain.user.entity.User;
@@ -9,8 +8,6 @@ import com.ssafy.fitmeet.global.error.CustomException;
 import com.ssafy.fitmeet.global.error.ErrorCode;
 import com.ssafy.fitmeet.global.file.FileStorageService;
 import com.ssafy.fitmeet.global.security.JwtTokenProvider;
-
-import static com.ssafy.fitmeet.global.util.PasswordValidator.validate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,10 +17,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 
 import static com.ssafy.fitmeet.domain.auth.dto.AuthDto.*;
+import static com.ssafy.fitmeet.global.util.PasswordValidator.validate;
 
 @Service
 @RequiredArgsConstructor
@@ -95,7 +92,6 @@ public class AuthServiceImpl implements AuthService{
                 (com.ssafy.fitmeet.global.security.CustomUserDetails) authentication.getPrincipal();
 
         String email = principal.getUsername();
-
         User user = userDao.findByEmail(email);
         if (user == null) {
         	throw new CustomException(ErrorCode.USER_NOT_FOUND);

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.fitmeet.domain.community.dao.CommunityPostDietDao">
+    <insert id="insert">
+        INSERT INTO community_post_diet (post_id, diet_id)
+        VALUES (#{postId}, #{dietId})
+    </insert>
+
+    <delete id="deleteByPostId">
+        DELETE FROM community_post_diet
+        WHERE post_id = #{postId}
+    </delete>
+
+    <select id="findDietIdsByPostId" resultType="long">
+        SELECT diet_id
+        FROM community_post_diet
+        WHERE post_id = #{postId}
+        ORDER BY diet_id ASC
+    </select>
+
+    <select id="findDietCardsByPostId" resultType="com.ssafy.fitmeet.domain.community.dao.CommunityPostDietDao$DietJoinRow">
+        SELECT
+        d.id AS dietId,
+        d.date AS date,
+        d.meal_type AS mealType,
+        d.description AS description,
+        d.image_url AS imageUrl,
+        d.total_kcal AS totalKcal,
+        d.total_carbohydrate AS totalCarbo,
+        d.total_protein AS totalProtein,
+        d.total_fat AS totalFat
+        FROM community_post_diet pd
+        JOIN diet d ON pd.diet_id = d.id
+        WHERE pd.post_id = #{postId}
+        AND d.deleted_at IS NULL
+        ORDER BY d.date DESC
+    </select>
+
+</mapper>

@@ -14,9 +14,11 @@ import com.ssafy.fitmeet.domain.user.service.UserDailyActivityService;
 import com.ssafy.fitmeet.domain.user.service.UserService;
 import com.ssafy.fitmeet.global.error.CustomException;
 import com.ssafy.fitmeet.global.error.ErrorCode;
+import com.ssafy.fitmeet.global.file.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,6 +30,9 @@ import java.util.List;
 public class CommunityServiceImpl implements CommunityService {
 
     private final CommunityPostDao postDao;
+    private final CommunityPostDietDao postDietDao;
+    private final CommunityPostVideoDao postVideoDao;
+
     private final CommunityTagDao tagDao;
     private final CommunityPostTagDao postTagDao;
     private final CommunityLikeDao likeDao;
@@ -35,6 +40,7 @@ public class CommunityServiceImpl implements CommunityService {
     private final UserService userService;
     private final UserDailyActivityService userDailyActivityService;
     private final UserDailyNutritionService userDailyNutritionService;
+    private final FileStorageService fileStorageService;
 
     private int normalizePage(Integer page) {
         return (page == null || page < 0) ? 0 : page;
@@ -46,21 +52,27 @@ public class CommunityServiceImpl implements CommunityService {
 
     @Override
     @Transactional
-    public Long createPost(Long userId, PostCreateRequest request) {
+    public Long createPost(Long userId, PostCreateRequest req, MultipartFile image) {
+
         LocalDateTime now = LocalDateTime.now();
+
+        String postImageUrl = null;
+        if (image != null && !image.isEmpty()) {
+            postImageUrl = fileStorageService.storeCommunityPostImage(userId, image);
+        }
 
         CommunityPost post = CommunityPost.builder()
                 .userId(userId)
-                .title(request.title())
-                .content(request.content())
-                .category(request.category() != null ? request.category() : "GENERAL")
-                .activityDate(request.activityDate())
-                .shareDiet(Boolean.TRUE.equals(request.shareDiet()))
-                .shareStreak(Boolean.TRUE.equals(request.shareStreak()))
-                .shareWorkout(Boolean.TRUE.equals(request.shareWorkout()))
-                .workoutNote(request.workoutNote())
-                .workoutVideoId(request.workoutVideoId())
-                .workoutVideoUrl(request.workoutVideoUrl())
+                .title(req.title())
+                .content(req.content())
+                .category(req.category() != null ? req.category() : "GENERAL")
+                .postImageUrl(postImageUrl)
+                .activityDate(req.activityDate())
+                .shareDiet(Boolean.TRUE.equals(req.shareDiet()))
+                .shareStreak(Boolean.TRUE.equals(req.shareStreak()))
+                .shareWorkout(Boolean.TRUE.equals(req.shareWorkout()))
+                .dietNote(req.dietNote())
+                .workoutNote(req.workoutNote())
                 .likeCount(0)
                 .viewCount(0)
                 .commentCount(0)
@@ -71,9 +83,22 @@ public class CommunityServiceImpl implements CommunityService {
 
         postDao.insert(post);
 
-        // 태그 처리
-        List<String> tags = normalizeTags(request.tags());
-        for (String tagName : tags) {
+        /* ===== diet 매핑 ===== */
+        if (req.dietIds() != null) {
+            for (Long dietId : req.dietIds()) {
+                if (dietId != null) postDietDao.insert(post.getId(), dietId);
+            }
+        }
+
+        /* ===== video 매핑 ===== */
+        if (req.workoutVideoIds() != null) {
+            for (Long videoId : req.workoutVideoIds()) {
+                if (videoId != null) postVideoDao.insert(post.getId(), videoId);
+            }
+        }
+
+        /* ===== tags ===== */
+        for (String tagName : normalizeTags(req.tags())) {
             CommunityTag tag = tagDao.findByName(tagName);
             if (tag == null) {
                 tag = CommunityTag.builder()
@@ -93,36 +118,58 @@ public class CommunityServiceImpl implements CommunityService {
 
     @Override
     @Transactional
-    public PostDetailResponse getPostDetail(Long currentUserId, Long postId, boolean isCreate) {
-        if(!isCreate) postDao.increaseViewCount(postId);
+    public PostDetailResponse getPostDetail(Long currentUserId, Long postId, boolean increaseView) {
+
+        if (increaseView) postDao.increaseViewCount(postId);
 
         CommunityPost post = postDao.findById(postId);
-        if (post == null || post.isDeleted()) {
-            throw new CustomException(ErrorCode.POST_NOT_FOUND);
-        }
+        if (post == null || post.isDeleted()) throw new CustomException(ErrorCode.POST_NOT_FOUND);
 
-        boolean likedByMe = false;
-        if (currentUserId != null) {
-            Boolean exists = likeDao.exists(postId, currentUserId);
-            likedByMe = Boolean.TRUE.equals(exists);
-        }
-
+        boolean likedByMe = (currentUserId != null) && Boolean.TRUE.equals(likeDao.exists(postId, currentUserId));
         User writer = userService.getUserById(post.getUserId());
+
         List<String> tags = postTagDao.findTagsByPostId(postId);
+        List<Long> dietIds = postDietDao.findDietIdsByPostId(postId);
+
+        // 운동 영상 카드 조회
+        List<CommunityPostVideoDao.WorkoutVideoJoinRow> rows = postVideoDao.findVideoCardsByPostId(postId);
+        List<WorkoutVideoCard> videos = new ArrayList<>();
+        for (var r : rows) {
+            int dur = (r.durationSec() == null) ? 0 : r.durationSec();
+            videos.add(WorkoutVideoCard.of(r.id(), r.youtubeVideoId(), r.title(), r.thumbnailUrl(), dur));
+        }
+
+        List<CommunityPostDietDao.DietJoinRow> dietRows = postDietDao.findDietCardsByPostId(postId);
+        List<DietCard> dietCards = new ArrayList<>();
+        for (var r : dietRows) {
+            dietCards.add(new DietCard(
+                    r.dietId(),
+                    r.date(),
+                    r.mealType(),
+                    r.description(),
+                    r.imageUrl(),
+                    r.totalKcal() == null ? 0.0 : r.totalKcal().doubleValue(),
+                    r.totalCarbo() == null ? 0.0 : r.totalCarbo().doubleValue(),
+                    r.totalProtein() == null ? 0.0 : r.totalProtein().doubleValue(),
+                    r.totalFat() == null ? 0.0 : r.totalFat().doubleValue()
+            ));
+        }
 
         ActivitySummaryResponse activitySummary = buildActivitySummary(post);
-
         return new PostDetailResponse(
                 post.getId(),
                 post.getTitle(),
                 post.getContent(),
                 post.getCategory(),
+                post.getPostImageUrl(),
                 post.getActivityDate(),
                 post.isShareDiet(),
                 post.isShareStreak(),
                 post.isShareWorkout(),
+                post.getDietNote(),
+                post.getWorkoutNote(),
                 post.getLikeCount(),
-                isCreate?post.getViewCount() : post.getViewCount() + 1,
+                post.getViewCount(),
                 post.getCommentCount(),
                 likedByMe,
                 tags,
@@ -130,11 +177,14 @@ public class CommunityServiceImpl implements CommunityService {
                 writer.getProfileImageUrl(),
                 post.getCreatedAt(),
                 post.getUpdatedAt(),
+                dietCards,
+                videos,
                 activitySummary
         );
     }
 
     private ActivitySummaryResponse buildActivitySummary(CommunityPost post) {
+
         if (post.getActivityDate() == null ||
                 (!post.isShareDiet() && !post.isShareStreak() && !post.isShareWorkout())) {
             return null;
@@ -144,15 +194,13 @@ public class CommunityServiceImpl implements CommunityService {
         Long ownerId = post.getUserId();
 
         boolean dietLogged = false;
-        boolean workoutLogged = false;
-        boolean challengeDone = false;
-
         List<DietActivityDay> days = userDailyActivityService.getDietActivityRange(ownerId, targetDate, targetDate);
         if (!days.isEmpty()) {
             DietActivityDay d = days.get(0);
             dietLogged = d.dietLogged();
         }
 
+        List<Long> dietIds = post.isShareDiet() ? postDietDao.findDietIdsByPostId(post.getId()) : List.of();
         Double todayKcal = null;
         Double todayCarbo = null;
         Double todayProtein = null;
@@ -175,14 +223,15 @@ public class CommunityServiceImpl implements CommunityService {
         Integer streakCount = null;
         if (post.isShareStreak()) {
             DietStreakInfo streakInfo = userDailyActivityService.getCurrentDietStreak(ownerId);
-            streakCount = streakInfo.streakCount();
+            streakCount = (streakInfo != null) ? streakInfo.streakCount() : 0;
         }
 
+        List<Long> workoutVideoIds = post.isShareWorkout() ? postVideoDao.findVideoIdsByPostId(post.getId()) : List.of();
         return new ActivitySummaryResponse(
                 targetDate,
                 dietLogged,
-                workoutLogged,
-                challengeDone,
+                dietIds,
+                post.getDietNote(),
                 todayKcal,
                 todayCarbo,
                 todayProtein,
@@ -191,47 +240,59 @@ public class CommunityServiceImpl implements CommunityService {
                 todaySodium,
                 streakCount,
                 post.isShareWorkout() ? post.getWorkoutNote() : null,
-                post.isShareWorkout() ? post.getWorkoutVideoId() : 0,
-                post.isShareWorkout() ? post.getWorkoutVideoUrl() : null
+                workoutVideoIds
         );
     }
 
     @Override
     @Transactional
-    public void updatePost(Long userId, Long postId, PostUpdateRequest request) {
+    public void updatePost(Long userId, Long postId, PostUpdateRequest req, MultipartFile image) {
+
         CommunityPost post = postDao.findById(postId);
-        if (post == null || post.isDeleted()) {
-            throw new CustomException(ErrorCode.POST_NOT_FOUND);
-        }
-        if (!post.getUserId().equals(userId)) {
-            throw new CustomException(ErrorCode.AUTH_ACCESS_DENIED);
-        }
+        if (post == null || post.isDeleted()) throw new CustomException(ErrorCode.POST_NOT_FOUND);
+        if (!post.getUserId().equals(userId)) throw new CustomException(ErrorCode.AUTH_ACCESS_DENIED);
 
-        post.setTitle(request.title());
-        post.setContent(request.content());
-        post.setCategory(request.category() != null ? request.category() : post.getCategory());
-        post.setActivityDate(request.activityDate());
-        post.setShareDiet(Boolean.TRUE.equals(request.shareDiet()));
-        post.setShareStreak(Boolean.TRUE.equals(request.shareStreak()));
-        post.setShareWorkout(Boolean.TRUE.equals(request.shareWorkout()));
-        post.setWorkoutNote(request.workoutNote());
-        post.setWorkoutVideoId(request.workoutVideoId());
-        post.setWorkoutVideoUrl(request.workoutVideoUrl());
+        post.setTitle(req.title());
+        post.setContent(req.content());
+        post.setCategory(req.category() != null ? req.category() : post.getCategory());
+        post.setActivityDate(req.activityDate());
+        post.setShareDiet(Boolean.TRUE.equals(req.shareDiet()));
+        post.setShareStreak(Boolean.TRUE.equals(req.shareStreak()));
+        post.setShareWorkout(Boolean.TRUE.equals(req.shareWorkout()));
+        post.setDietNote(req.dietNote());
+        post.setWorkoutNote(req.workoutNote());
         post.setUpdatedAt(LocalDateTime.now());
-        postDao.update(post);
 
-        // 태그 재설정
+        if (image != null && !image.isEmpty()) {
+            fileStorageService.deleteCommunityPostImageFile(post.getPostImageUrl());
+            String newUrl = fileStorageService.storeCommunityPostImage(userId, image);
+            post.setPostImageUrl(newUrl);
+        }
+
+        postDao.update(post);
+        postDietDao.deleteByPostId(postId);
+        if (req.dietIds() != null) {
+            for (Long dietId : req.dietIds()) {
+                if (dietId != null) postDietDao.insert(postId, dietId);
+            }
+        }
+
+        postVideoDao.deleteByPostId(postId);
+        if (req.workoutVideoIds() != null) {
+            for (Long vid : req.workoutVideoIds()) {
+                if (vid != null) postVideoDao.insert(postId, vid);
+            }
+        }
+
         List<String> oldTags = postTagDao.findTagsByPostId(postId);
         postTagDao.deleteByPostId(postId);
         for (String tagName : oldTags) {
             CommunityTag tag = tagDao.findByName(tagName);
-            if (tag != null) {
-                tagDao.increaseUsageCount(tag.getId(), -1);
-            }
+            if (tag != null) tagDao.increaseUsageCount(tag.getId(), -1);
         }
 
         LocalDateTime now = LocalDateTime.now();
-        List<String> newTags = normalizeTags(request.tags());
+        List<String> newTags = normalizeTags(req.tags());
         for (String tagName : newTags) {
             CommunityTag tag = tagDao.findByName(tagName);
             if (tag == null) {
@@ -252,32 +313,23 @@ public class CommunityServiceImpl implements CommunityService {
     @Transactional
     public void softDeletePost(Long userId, Long postId) {
         int updated = postDao.softDelete(postId, userId);
-        if (updated == 0) {
-            throw new CustomException(ErrorCode.AUTH_ACCESS_DENIED);
-        }
+        if (updated == 0) throw new CustomException(ErrorCode.AUTH_ACCESS_DENIED);
     }
 
     @Override
     @Transactional
     public void restorePost(Long userId, Long postId) {
         int updated = postDao.restore(postId, userId);
-        if (updated == 0) {
-            throw new CustomException(ErrorCode.AUTH_ACCESS_DENIED);
-        }
+        if (updated == 0) throw new CustomException(ErrorCode.AUTH_ACCESS_DENIED);
     }
 
     @Override
     @Transactional
     public void likePost(Long userId, Long postId) {
         CommunityPost post = postDao.findById(postId);
-        if (post == null || post.isDeleted()) {
-            throw new CustomException(ErrorCode.POST_NOT_FOUND);
-        }
+        if (post == null || post.isDeleted()) throw new CustomException(ErrorCode.POST_NOT_FOUND);
 
-        Boolean exists = likeDao.exists(postId, userId);
-        if (Boolean.TRUE.equals(exists)) {
-            return;
-        }
+        if (Boolean.TRUE.equals(likeDao.exists(postId, userId))) return;
 
         likeDao.insert(postId, userId);
         postDao.updateLikeCount(postId, +1);
@@ -286,10 +338,7 @@ public class CommunityServiceImpl implements CommunityService {
     @Override
     @Transactional
     public void unlikePost(Long userId, Long postId) {
-        Boolean exists = likeDao.exists(postId, userId);
-        if (!Boolean.TRUE.equals(exists)) {
-            return;
-        }
+        if (!Boolean.TRUE.equals(likeDao.exists(postId, userId))) return;
 
         likeDao.delete(postId, userId);
         postDao.updateLikeCount(postId, -1);
@@ -297,19 +346,16 @@ public class CommunityServiceImpl implements CommunityService {
 
     @Override
     @Transactional
-    public Long addComment(Long userId, Long postId, CommentCreateRequest request) {
+    public Long addComment(Long userId, Long postId, CommentCreateRequest req) {
         CommunityPost post = postDao.findById(postId);
-        if (post == null || post.isDeleted()) {
-            throw new CustomException(ErrorCode.POST_NOT_FOUND);
-        }
+        if (post == null || post.isDeleted()) throw new CustomException(ErrorCode.POST_NOT_FOUND);
 
         LocalDateTime now = LocalDateTime.now();
-
         CommunityComment comment = CommunityComment.builder()
                 .postId(postId)
                 .userId(userId)
-                .content(request.content())
-                .parentId(request.parentId())
+                .content(req.content())
+                .parentId(req.parentId())
                 .isDeleted(false)
                 .createdAt(now)
                 .updatedAt(now)
@@ -317,7 +363,6 @@ public class CommunityServiceImpl implements CommunityService {
 
         commentDao.insert(comment);
         postDao.updateCommentCount(postId, +1);
-
         return comment.getId();
     }
 
@@ -325,17 +370,11 @@ public class CommunityServiceImpl implements CommunityService {
     @Transactional
     public void deleteComment(Long userId, Long commentId) {
         CommunityComment comment = commentDao.findById(commentId);
-        if (comment == null || comment.isDeleted()) {
-            throw new CustomException(ErrorCode.COMMENT_NOT_FOUND);
-        }
-        if (!comment.getUserId().equals(userId)) {
-            throw new CustomException(ErrorCode.AUTH_ACCESS_DENIED);
-        }
+        if (comment == null || comment.isDeleted()) throw new CustomException(ErrorCode.COMMENT_NOT_FOUND);
+        if (!comment.getUserId().equals(userId)) throw new CustomException(ErrorCode.AUTH_ACCESS_DENIED);
 
         int updated = commentDao.softDelete(commentId, userId);
-        if (updated == 0) {
-            throw new CustomException(ErrorCode.AUTH_ACCESS_DENIED);
-        }
+        if (updated == 0) throw new CustomException(ErrorCode.AUTH_ACCESS_DENIED);
 
         postDao.updateCommentCount(comment.getPostId(), -1);
     }
@@ -361,13 +400,13 @@ public class CommunityServiceImpl implements CommunityService {
                     c.getCreatedAt()
             ));
         }
-
         return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public PostPageResponse searchPosts(Long currentUserId, PostSearchCondition cond) {
+
         int page = normalizePage(cond.page());
         int size = normalizeSize(cond.size());
         int offset = page * size;
@@ -385,10 +424,7 @@ public class CommunityServiceImpl implements CommunityService {
 
         List<PostSummaryResponse> content = new ArrayList<>();
         for (CommunityPost p : posts) {
-            boolean likedByMe = false;
-            if (currentUserId != null) {
-                likedByMe = Boolean.TRUE.equals(likeDao.exists(p.getId(), currentUserId));
-            }
+            boolean likedByMe = (currentUserId != null) && Boolean.TRUE.equals(likeDao.exists(p.getId(), currentUserId));
 
             User writer = userService.getUserById(p.getUserId());
             List<String> tags = postTagDao.findTagsByPostId(p.getId());
@@ -419,10 +455,10 @@ public class CommunityServiceImpl implements CommunityService {
         return PostPageResponse.of(content, page, size, totalElements);
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public PostPageResponse getMyLikedPosts(Long userId, Integer page, Integer size) {
+
         int p = normalizePage(page);
         int s = normalizeSize(size);
         int offset = p * s;
@@ -461,10 +497,10 @@ public class CommunityServiceImpl implements CommunityService {
         return PostPageResponse.of(content, p, s, totalElements);
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public PostPageResponse getMyPosts(Long userId, Integer page, Integer size) {
+
         int p = normalizePage(page);
         int s = normalizeSize(size);
         int offset = p * s;
@@ -474,8 +510,8 @@ public class CommunityServiceImpl implements CommunityService {
 
         List<PostSummaryResponse> content = new ArrayList<>();
         for (CommunityPost post : posts) {
-            boolean likedByMe = Boolean.TRUE.equals(likeDao.exists(post.getId(), userId));
 
+            boolean likedByMe = Boolean.TRUE.equals(likeDao.exists(post.getId(), userId));
             User writer = userService.getUserById(post.getUserId());
             List<String> tags = postTagDao.findTagsByPostId(post.getId());
 
@@ -504,8 +540,6 @@ public class CommunityServiceImpl implements CommunityService {
 
         return PostPageResponse.of(content, p, s, totalElements);
     }
-
-
 
     @Override
     @Transactional(readOnly = true)

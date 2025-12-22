@@ -37,8 +37,7 @@ public class TrainingYoutubeSyncService {
             try {
                 syncSource(source);
             } catch (Exception e) {
-                log.error("YouTube Sync 실패 - sourceId={}, type={}, value={}",
-                        source.getId(), source.getSourceType(), source.getSourceValue(), e);
+                log.error("YouTube Sync 실패 - sourceId={}, type={}, value={}", source.getId(), source.getSourceType(), source.getSourceValue(), e);
             }
         }
     }
@@ -48,8 +47,7 @@ public class TrainingYoutubeSyncService {
      */
     @Transactional
     public void syncSource(TrainingYoutubeSource source) {
-        log.info("YouTube Sync - sourceId={}, type={}, value={}",
-                source.getId(), source.getSourceType(), source.getSourceValue());
+        log.info("YouTube Sync - sourceId={}, type={}, value={}", source.getId(), source.getSourceType(), source.getSourceValue());
 
         // 1) videoId 목록 수집
         List<String> videoIds = fetchVideoIdsFromSource(source);

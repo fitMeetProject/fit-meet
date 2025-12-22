@@ -9,9 +9,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -28,13 +30,13 @@ public class CommunityRestController {
      * - 제목, 내용, 카테고리, 태그
      * - 고급 설정: activityDate, shareDiet, shareStreak, shareWorkout, workoutNote, workoutVideoUrl
      */
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "게시글 작성", description = "커뮤니티 게시글 등록 (식단/스트릭/운동 공유 옵션 포함)")
-    public ResponseEntity<Response<PostDetailResponse>> createPost(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody PostCreateRequest request) {
+    public ResponseEntity<Response<PostDetailResponse>> createPost(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestPart("data") PostCreateRequest request, @RequestPart(value = "image", required = false) MultipartFile image) {
         Long userId = userDetails.getId();
 
-        Long postId = communityService.createPost(userId, request);
-        PostDetailResponse body = communityService.getPostDetail(userId, postId, true);
+        Long postId = communityService.createPost(userId, request, image);
+        PostDetailResponse body = communityService.getPostDetail(userId, postId, false);
 
         return ResponseEntity.ok(ResponseUtil.ok("게시글 등록 완료", body));
     }
@@ -47,8 +49,8 @@ public class CommunityRestController {
     @GetMapping("/{postId}")
     @Operation(summary = "게시글 상세 조회", description = "게시글 상세, 태그, 활동 요약(식단/스트릭/운동), 좋아요 여부 등을 조회")
     public ResponseEntity<Response<PostDetailResponse>> getPostDetail(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long postId) {
-        Long currentUserId = (userDetails != null) ? userDetails.getId() : null; // 비로그인 허용 시 대비
-        PostDetailResponse body = communityService.getPostDetail(currentUserId, postId, false);
+        Long currentUserId = (userDetails != null) ? userDetails.getId() : null;
+        PostDetailResponse body = communityService.getPostDetail(currentUserId, postId, true);
 
         return ResponseEntity.ok(ResponseUtil.ok(body));
     }
@@ -56,11 +58,11 @@ public class CommunityRestController {
     /**
      * 게시글 수정
      */
-    @PutMapping("/{postId}")
+    @PutMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "게시글 수정", description = "본인이 작성한 커뮤니티 게시글 수정")
-    public ResponseEntity<Response<Void>> updatePost(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long postId, @RequestBody PostUpdateRequest request) {
+    public ResponseEntity<Response<Void>> updatePost(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long postId, @RequestPart("data") PostUpdateRequest request,@RequestPart(value = "image", required = false) MultipartFile image) {
         Long userId = userDetails.getId();
-        communityService.updatePost(userId, postId, request);
+        communityService.updatePost(userId, postId, request, image);
 
         return ResponseEntity.ok(ResponseUtil.ok("게시글 수정 완료", null));
     }
@@ -94,7 +96,7 @@ public class CommunityRestController {
      * - keyword, tag, category, sort(POPULAR/LATEST/OLDEST), page, size
      * - 기본 sort = POPULAR
      */
-    @GetMapping
+    @GetMapping("/posts")
     @Operation(summary = "게시글 목록/검색", description = "키워드/태그/카테고리/정렬 기준으로 게시글 목록 조회")
     public ResponseEntity<Response<PostPageResponse>> searchPosts(@AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(value = "keyword", required = false) String keyword,
