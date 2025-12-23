@@ -18,6 +18,11 @@ public interface TrainingVideoHistoryDao {
 
     List<TrainingVideoHistory> findByUserAndDate(@Param("userId") Long userId, @Param("activityDate") LocalDate activityDate);
 
-    int countCompletedByUserAndDate(Long userId, LocalDate activityDate);
+    int countCompletedByUserAndDate(@Param("userId") Long userId, @Param("activityDate") LocalDate activityDate);
 
+    /** 오늘 완료(completed=1)한 video_id 목록 */
+    List<Long> findCompletedVideoIdsByUserAndDate(@Param("userId") Long userId, @Param("activityDate") LocalDate activityDate);
+
+    /** 과거 포함(누적) completed=1 이력이 있는 video_id 목록 */
+    List<Long> findEverCompletedVideoIdsByUser(@Param("userId") Long userId);
 }

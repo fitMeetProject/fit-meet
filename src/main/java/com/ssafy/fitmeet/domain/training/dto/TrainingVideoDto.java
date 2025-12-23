@@ -23,10 +23,12 @@ public class TrainingVideoDto {
             List<String> tags,
             long viewCount,
             long likeCount,
-            boolean liked
+            boolean liked,
+            boolean completed,
+            boolean doneBefore
     ) {
-        public static VideoCardResponse of(TrainingVideo v, boolean liked) {
-            List<String> tagList = v.getTags() == null
+        public static VideoCardResponse of(TrainingVideo v, boolean liked, boolean completed, boolean doneBefore) {
+            List<String> tagList = (v.getTags() == null || v.getTags().isEmpty())
                     ? List.of()
                     : Arrays.asList(v.getTags().split(","));
 
@@ -42,7 +44,9 @@ public class TrainingVideoDto {
                     tagList,
                     v.getViewCount(),
                     v.getLikeCount(),
-                    liked
+                    liked,
+                    completed,
+                    doneBefore
             );
         }
     }
@@ -127,10 +131,10 @@ public class TrainingVideoDto {
             long youtubeViewCnt,
             long youtubeLikeCnt,
             boolean liked,
-            boolean completedToday,
+            boolean completed,
+            boolean doneBefore,
             List<VideoCommentResponse> comments
     ) {}
-
     @Schema(description = "운동 영상 댓글 작성 요청")
     public record CreateCommentRequest(
             String content

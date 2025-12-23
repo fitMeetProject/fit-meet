@@ -17,10 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -34,22 +31,33 @@ public class TrainingVideoServiceImpl implements TrainingVideoService {
     private final UserDao userDao;
 
     @Override
+    @Transactional(readOnly = true)
     public List<VideoCardResponse> getRecommended(Long userId, String category, int limit) {
         List<TrainingVideo> list = trainingVideoDao.findRecommended(category, limit);
+        if (list.isEmpty()) return List.of();
+
+        LocalDate today = LocalDate.now();
+        Set<Long> todayCompletedSet = new HashSet<>(trainingVideoHistoryDao.findCompletedVideoIdsByUserAndDate(userId, today));
+        Set<Long> everCompletedSet = new HashSet<>(trainingVideoHistoryDao.findEverCompletedVideoIdsByUser(userId));
 
         return list.stream()
-                .map(v -> VideoCardResponse.of(v, trainingVideoDao.isLiked(userId, v.getId()) != null))
+                .map(v -> {
+                    boolean liked = trainingVideoDao.isLiked(userId, v.getId()) != null;
+                    boolean completedToday = todayCompletedSet.contains(v.getId());
+                    boolean doneBefore = everCompletedSet.contains(v.getId());
+                    return VideoCardResponse.of(v, liked, completedToday, doneBefore);
+                })
                 .toList();
     }
 
-    @Override
-    public VideoPageResponse searchVideos(Long userId, VideoSearchRequest req) {
 
+    @Override
+    @Transactional(readOnly = true)
+    public VideoPageResponse searchVideos(Long userId, VideoSearchRequest req) {
         int page = (req.page() != null && req.page() >= 0) ? req.page() : 0;
         int size = (req.size() != null && req.size() > 0) ? req.size() : 20;
         int offset = page * size;
 
-        // 목록
         List<TrainingVideo> list = trainingVideoDao.findVideos(
                 req.category(),
                 req.level(),
@@ -59,17 +67,27 @@ public class TrainingVideoServiceImpl implements TrainingVideoService {
                 size
         );
 
-        List<VideoCardResponse> content = list.stream()
-                .map(v -> VideoCardResponse.of(v, trainingVideoDao.isLiked(userId, v.getId()) != null))
-                .toList();
-
-        // 총 개수
         long total = trainingVideoDao.countVideos(
                 req.category(),
                 req.level(),
                 req.shortVideo(),
                 req.sort()
         );
+
+        if (list.isEmpty()) return VideoPageResponse.of(List.of(), page, size, total);
+
+        LocalDate today = LocalDate.now();
+        Set<Long> todayCompletedSet = new HashSet<>(trainingVideoHistoryDao.findCompletedVideoIdsByUserAndDate(userId, today));
+        Set<Long> everCompletedSet = new HashSet<>(trainingVideoHistoryDao.findEverCompletedVideoIdsByUser(userId));
+
+        List<VideoCardResponse> content = list.stream()
+                .map(v -> {
+                    boolean liked = trainingVideoDao.isLiked(userId, v.getId()) != null;
+                    boolean completedToday = todayCompletedSet.contains(v.getId());
+                    boolean doneBefore = everCompletedSet.contains(v.getId());
+                    return VideoCardResponse.of(v, liked, completedToday, doneBefore);
+                })
+                .toList();
 
         return VideoPageResponse.of(content, page, size, total);
     }
@@ -130,18 +148,14 @@ public class TrainingVideoServiceImpl implements TrainingVideoService {
     @Override
     @Transactional
     public boolean toggleComplete(Long userId, Long videoId, Integer durationSec, String memo) {
-
         TrainingVideo video = trainingVideoDao.findById(videoId);
-        if (video == null) {
-            throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
-        }
+        if (video == null) throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
 
         LocalDate today = LocalDate.now();
         TrainingVideoHistory history = trainingVideoHistoryDao.findByUserAndVideoAndDate(userId, videoId, today);
 
         boolean nowCompleted;
 
-        // 1. 오늘 히스토리 row가 없으면 새로 생성하고 완료=1
         if (history == null) {
             history = TrainingVideoHistory.builder()
                     .userId(userId)
@@ -153,32 +167,23 @@ public class TrainingVideoServiceImpl implements TrainingVideoService {
                     .build();
             trainingVideoHistoryDao.insertHistory(history);
             nowCompleted = true;
-
         } else {
-            // 2. 있으면 completed를 토글
             int current = (history.getCompleted() != null) ? history.getCompleted() : 0;
             int next = (current == 1) ? 0 : 1;
 
             history.setCompleted(next);
 
-            // 완료로 바뀌는 경우에만 duration/memo 갱신
             if (next == 1) {
                 history.setDurationSec(durationSec);
                 history.setMemo(memo);
             }
-
             trainingVideoHistoryDao.updateHistory(history);
             nowCompleted = (next == 1);
         }
 
-        // 3. 오늘 날짜 기준 "완료한 운동"이 하나라도 있으면 workoutLogged=true
         int completedCount = trainingVideoHistoryDao.countCompletedByUserAndDate(userId, today);
-
-        if (completedCount > 0) {
-            userDailyActivityService.markWorkoutLogged(userId, today);
-        } else {
-            userDailyActivityService.unmarkWorkoutLogged(userId, today);
-        }
+        if (completedCount > 0) userDailyActivityService.markWorkoutLogged(userId, today);
+        else userDailyActivityService.unmarkWorkoutLogged(userId, today);
 
         return nowCompleted;
     }
@@ -204,18 +209,15 @@ public class TrainingVideoServiceImpl implements TrainingVideoService {
     @Transactional(readOnly = true)
     public VideoDetailResponse getVideoDetail(Long userId, Long videoId) {
         TrainingVideo video = trainingVideoDao.findById(videoId);
-        if (video == null) {
-            throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
-        }
+        if (video == null) throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
 
         boolean liked = trainingVideoDao.isLiked(userId, videoId) != null;
 
-        // 오늘 완료 여부
         LocalDate today = LocalDate.now();
-        TrainingVideoHistory history = trainingVideoHistoryDao.findByUserAndVideoAndDate(userId, videoId, today);
-        boolean completedToday = (history != null && history.getCompleted() == 1);
+        TrainingVideoHistory todayHistory = trainingVideoHistoryDao.findByUserAndVideoAndDate(userId, videoId, today);
+        boolean completedToday = (todayHistory != null && Objects.equals(todayHistory.getCompleted(), 1));
+        boolean doneBefore = trainingVideoHistoryDao.findEverCompletedVideoIdsByUser(userId).contains(videoId);
 
-        // 댓글 목록
         List<TrainingVideoComment> comments = trainingVideoCommentDao.findByVideoId(videoId);
         List<VideoCommentResponse> commentResponses = comments.stream()
                 .map(c -> {
@@ -231,7 +233,7 @@ public class TrainingVideoServiceImpl implements TrainingVideoService {
                 })
                 .toList();
 
-        List<String> tags = video.getTags() == null || video.getTags().isEmpty()
+        List<String> tags = (video.getTags() == null || video.getTags().isEmpty())
                 ? List.of()
                 : Arrays.asList(video.getTags().split(","));
 
@@ -251,6 +253,7 @@ public class TrainingVideoServiceImpl implements TrainingVideoService {
                 Optional.ofNullable(video.getYoutubeLikeCnt()).orElse(0L),
                 liked,
                 completedToday,
+                doneBefore,
                 commentResponses
         );
     }

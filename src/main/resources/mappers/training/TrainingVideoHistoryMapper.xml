@@ -23,9 +23,11 @@
         WHERE user_id = #{userId}
         AND video_id = #{videoId}
         AND activity_date = #{activityDate}
+        LIMIT 1
     </select>
 
-    <insert id="insertHistory" parameterType="com.ssafy.fitmeet.domain.training.entity.TrainingVideoHistory" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertHistory" parameterType="com.ssafy.fitmeet.domain.training.entity.TrainingVideoHistory"
+            useGeneratedKeys="true" keyProperty="id">
         INSERT INTO training_video_history (
         user_id, video_id, activity_date,
         completed, duration_sec, memo,
@@ -62,5 +64,19 @@
         AND completed = 1
     </select>
 
+    <select id="findCompletedVideoIdsByUserAndDate" resultType="long">
+        SELECT video_id
+        FROM training_video_history
+        WHERE user_id = #{userId}
+        AND activity_date = #{activityDate}
+        AND completed = 1
+    </select>
+
+    <select id="findEverCompletedVideoIdsByUser" resultType="long">
+        SELECT DISTINCT video_id
+        FROM training_video_history
+        WHERE user_id = #{userId}
+        AND completed = 1
+    </select>
 
 </mapper>
