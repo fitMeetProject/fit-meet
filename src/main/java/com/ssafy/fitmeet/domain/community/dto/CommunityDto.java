@@ -84,6 +84,7 @@ public class CommunityDto {
             Long id,
             String title,
             String contentPreview,
+            String postImageUrl,
             String category,
             LocalDate activityDate,
             boolean shareDiet,
