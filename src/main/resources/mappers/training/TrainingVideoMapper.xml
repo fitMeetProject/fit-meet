@@ -27,6 +27,12 @@
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
+    <select id="findAllIds" resultType="long">
+        SELECT id
+        FROM training_video
+        WHERE is_active = 1
+        ORDER BY id ASC
+    </select>
 
     <select id="findRecommended" resultType="TrainingVideo">
         SELECT *
@@ -65,10 +71,20 @@
             <when test="sort != null and sort == 'LATEST'">
                 ORDER BY created_at DESC
             </when>
+
+            <when test="sort != null and sort == 'YOUTUBE_VIEW'">
+                ORDER BY youtube_view_cnt DESC, youtube_like_cnt DESC
+            </when>
+
+            <when test="sort != null and sort == 'APP_VIEW'">
+                ORDER BY view_count DESC, like_count DESC
+            </when>
+
             <otherwise>
                 ORDER BY created_at DESC
             </otherwise>
         </choose>
+
 
         LIMIT #{size} OFFSET #{offset}
     </select>
@@ -133,6 +149,11 @@
         WHERE youtube_video_id = #{youtubeVideoId}
     </update>
 
+    <update id="increaseViewCount">
+        UPDATE training_video
+        SET view_count = view_count + 1
+        WHERE id = #{id}
+    </update>
 
     <select id="isLiked" resultType="Integer">
         SELECT 1

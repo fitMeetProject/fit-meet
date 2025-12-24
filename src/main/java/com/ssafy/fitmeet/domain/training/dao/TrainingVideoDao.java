@@ -9,6 +9,8 @@ import java.util.List;
 @Mapper
 public interface TrainingVideoDao {
 
+    List<Long> findAllIds();
+
     List<TrainingVideo> findRecommended(@Param("category") String category, @Param("limit") int limit);
 
     List<TrainingVideo> findVideos(@Param("category") String category, @Param("level") String level, @Param("shortVideo") Boolean shortVideo, @Param("sort") String sort, @Param("offset") int offset, @Param("size") int size);
@@ -18,6 +20,8 @@ public interface TrainingVideoDao {
     TrainingVideo findById(@Param("id") Long id);
 
     TrainingVideo findByYoutubeVideoId(@Param("youtubeVideoId") String youtubeVideoId);
+
+    int increaseViewCount(@Param("id") Long id);
 
     int insertVideo(TrainingVideo video);
 

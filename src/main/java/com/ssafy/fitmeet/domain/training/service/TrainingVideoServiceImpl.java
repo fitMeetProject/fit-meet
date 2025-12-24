@@ -206,10 +206,13 @@ public class TrainingVideoServiceImpl implements TrainingVideoService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional // readOnly 제거
     public VideoDetailResponse getVideoDetail(Long userId, Long videoId) {
         TrainingVideo video = trainingVideoDao.findById(videoId);
         if (video == null) throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
+
+        trainingVideoDao.increaseViewCount(videoId);
+        video = trainingVideoDao.findById(videoId);
 
         boolean liked = trainingVideoDao.isLiked(userId, videoId) != null;
 
@@ -233,9 +236,7 @@ public class TrainingVideoServiceImpl implements TrainingVideoService {
                 })
                 .toList();
 
-        List<String> tags = (video.getTags() == null || video.getTags().isEmpty())
-                ? List.of()
-                : Arrays.asList(video.getTags().split(","));
+        List<String> tags = (video.getTags() == null || video.getTags().isEmpty()) ? List.of() : Arrays.asList(video.getTags().split(","));
 
         return new VideoDetailResponse(
                 video.getId(),

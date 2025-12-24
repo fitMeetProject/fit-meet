@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.ssafy.fitmeet.domain.meal.dao.MealNutritionDao">
 
@@ -44,6 +44,21 @@
                      #{sodium},
                      #{dietaryFiber}
                  )
+    </insert>
+
+    <insert id="insertMany">
+        INSERT INTO meal_nutrition (
+        meal_id, base_amount_g,
+        kcal, carbohydrate, protein, fat, sugar, sodium, dietary_fiber,
+        created_at, updated_at
+        ) VALUES
+        <foreach collection="list" item="n" separator=",">
+            (
+            #{n.mealId}, #{n.baseAmountG},
+            #{n.kcal}, #{n.carbohydrate}, #{n.protein}, #{n.fat}, #{n.sugar}, #{n.sodium}, #{n.dietaryFiber},
+            NOW(), NOW()
+            )
+        </foreach>
     </insert>
 
     <!-- 단건 조회: meal_id -->

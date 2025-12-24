@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.ssafy.fitmeet.domain.meal.dao.MealDao">
 
@@ -46,7 +46,8 @@
             category,
             brand,
             tags,
-            update_date
+            update_date,
+            created_at, updated_at
         ) VALUES (
                      #{foodCd},
                      #{foodNmKr},
@@ -63,9 +64,37 @@
                      #{category},
                      #{brand},
                      #{tags},
-                     #{updateDate}
+                     #{updateDate},
+                     NOW(), NOW()
                  )
     </insert>
+
+    <insert id="insertMany">
+        INSERT INTO meal (
+        food_cd, food_nm_kr, db_grp_cm, db_grp_nm,
+        food_cat1_cd, food_cat1_nm, food_cat2_cd, food_cat2_nm, food_cat3_cd, food_cat3_nm,
+        serving_size_raw, source_type, category, brand, tags, update_date,
+        created_at, updated_at
+        ) VALUES
+        <foreach collection="list" item="m" separator=",">
+            (
+            #{m.foodCd}, #{m.foodNmKr}, #{m.dbGrpCm}, #{m.dbGrpNm},
+            #{m.foodCat1Cd}, #{m.foodCat1Nm}, #{m.foodCat2Cd}, #{m.foodCat2Nm}, #{m.foodCat3Cd}, #{m.foodCat3Nm},
+            #{m.servingSizeRaw}, #{m.sourceType}, #{m.category}, #{m.brand}, #{m.tags}, #{m.updateDate},
+            NOW(), NOW()
+            )
+        </foreach>
+    </insert>
+
+    <select id="findIdsByFoodCdIn" resultType="long">
+        SELECT id
+        FROM meal
+        WHERE food_cd IN
+        <foreach collection="list" item="cd" open="(" separator="," close=")">
+            #{cd}
+        </foreach>
+        ORDER BY id ASC
+    </select>
 
     <!-- 단건 조회: id -->
     <select id="findById" resultMap="MealMap">
