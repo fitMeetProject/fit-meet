@@ -56,6 +56,9 @@
         share_workout = #{shareWorkout},
         diet_note = #{dietNote},
         workout_note = #{workoutNote}
+        <if test="postImageUrl != null">
+            ,post_image_url = #{postImageUrl}
+        </if>
         WHERE id = #{id}
         AND is_deleted = 0
     </update>

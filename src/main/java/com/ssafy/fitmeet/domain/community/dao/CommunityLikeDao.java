@@ -10,6 +10,7 @@ public interface CommunityLikeDao {
 
     int delete(@Param("postId") Long postId, @Param("userId") Long userId);
 
-    Boolean exists(@Param("postId") Long postId, @Param("userId") Long userId);
+    Integer exists(@Param("postId") Long postId, @Param("userId") Long userId);
+
 }
 

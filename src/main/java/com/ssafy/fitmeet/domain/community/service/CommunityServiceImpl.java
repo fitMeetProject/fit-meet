@@ -125,7 +125,7 @@ public class CommunityServiceImpl implements CommunityService {
         CommunityPost post = postDao.findById(postId);
         if (post == null || post.isDeleted()) throw new CustomException(ErrorCode.POST_NOT_FOUND);
 
-        boolean likedByMe = (currentUserId != null) && Boolean.TRUE.equals(likeDao.exists(postId, currentUserId));
+        boolean likedByMe = (currentUserId != null) && likeDao.exists(postId, currentUserId) > 0;
         User writer = userService.getUserById(post.getUserId());
 
         List<String> tags = postTagDao.findTagsByPostId(postId);
@@ -329,7 +329,7 @@ public class CommunityServiceImpl implements CommunityService {
         CommunityPost post = postDao.findById(postId);
         if (post == null || post.isDeleted()) throw new CustomException(ErrorCode.POST_NOT_FOUND);
 
-        if (Boolean.TRUE.equals(likeDao.exists(postId, userId))) return;
+        if (likeDao.exists(postId, userId) > 0) return;
 
         likeDao.insert(postId, userId);
         postDao.updateLikeCount(postId, +1);
@@ -338,7 +338,7 @@ public class CommunityServiceImpl implements CommunityService {
     @Override
     @Transactional
     public void unlikePost(Long userId, Long postId) {
-        if (!Boolean.TRUE.equals(likeDao.exists(postId, userId))) return;
+        if (likeDao.exists(postId, userId) == 0) return;
 
         likeDao.delete(postId, userId);
         postDao.updateLikeCount(postId, -1);
@@ -424,7 +424,7 @@ public class CommunityServiceImpl implements CommunityService {
 
         List<PostSummaryResponse> content = new ArrayList<>();
         for (CommunityPost p : posts) {
-            boolean likedByMe = (currentUserId != null) && Boolean.TRUE.equals(likeDao.exists(p.getId(), currentUserId));
+            boolean likedByMe = (currentUserId != null) && likeDao.exists(p.getId(), currentUserId) > 0;
 
             User writer = userService.getUserById(p.getUserId());
             List<String> tags = postTagDao.findTagsByPostId(p.getId());
@@ -513,7 +513,7 @@ public class CommunityServiceImpl implements CommunityService {
         List<PostSummaryResponse> content = new ArrayList<>();
         for (CommunityPost post : posts) {
 
-            boolean likedByMe = Boolean.TRUE.equals(likeDao.exists(post.getId(), userId));
+            boolean likedByMe = likeDao.exists(post.getId(), userId) > 0;
             User writer = userService.getUserById(post.getUserId());
             List<String> tags = postTagDao.findTagsByPostId(post.getId());
 

@@ -19,7 +19,7 @@
     </delete>
 
     <!-- 좋아요 여부 확인 -->
-    <select id="exists" resultType="boolean">
+    <select id="exists" resultType="int">
         SELECT COUNT(*)
         FROM `community_post_like`
         WHERE `post_id` = #{postId}

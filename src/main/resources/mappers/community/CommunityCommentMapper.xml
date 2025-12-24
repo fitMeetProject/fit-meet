@@ -26,7 +26,7 @@
         ) VALUES (
         #{postId}, #{userId}, #{content},
         #{parentId}, #{isDeleted},
-        #{createdAt}, #{updatedAt}
+        NOW(), NOW()
         )
     </insert>
 

@@ -83,13 +83,14 @@ public class DashboardSeeder {
                     act.setUserId(userId);
                     act.setDate(d);
                     act.setDietLogged(true);
-                    act.setWorkoutLogged(false);   // 아직 운동 시드 안 넣었으면 false
+                    act.setWorkoutLogged(false);
                     act.setChallengeDone(false);
                     userDailyActivityDao.insert(act);
                 } else {
                     act.setDietLogged(true);
                     userDailyActivityDao.update(act);
                 }
+
             }
         }
     }

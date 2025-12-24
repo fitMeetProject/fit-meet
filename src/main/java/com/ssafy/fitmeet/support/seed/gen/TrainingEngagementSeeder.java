@@ -27,10 +27,7 @@ public class TrainingEngagementSeeder {
      * - userIds 중에서 랜덤 선택
      */
     @Transactional
-    public void seedLikes(List<Long> userIds,
-                          List<Long> videoIds,
-                          int perVideoLikeMin,
-                          int perVideoLikeMax) {
+    public void seedLikes(List<Long> userIds, List<Long> videoIds, int perVideoLikeMin, int perVideoLikeMax) {
 
         if (userIds == null || userIds.isEmpty()) return;
         if (videoIds == null || videoIds.isEmpty()) return;
@@ -60,11 +57,7 @@ public class TrainingEngagementSeeder {
      * - deleteRate: soft delete 비율(0~100)
      */
     @Transactional
-    public void seedComments(List<Long> userIds,
-                             List<Long> videoIds,
-                             int perVideoCommentMin,
-                             int perVideoCommentMax,
-                             int deleteRate) {
+    public void seedComments(List<Long> userIds, List<Long> videoIds, int perVideoCommentMin, int perVideoCommentMax, int deleteRate) {
 
         if (userIds == null || userIds.isEmpty()) return;
         if (videoIds == null || videoIds.isEmpty()) return;
@@ -97,9 +90,7 @@ public class TrainingEngagementSeeder {
      * - perVideoViewMin~Max: 영상 하나당 조회수 증가 범위
      */
     @Transactional
-    public void seedViews(List<Long> videoIds,
-                          int perVideoViewMin,
-                          int perVideoViewMax) {
+    public void seedViews(List<Long> videoIds, int perVideoViewMin, int perVideoViewMax) {
 
         if (videoIds == null || videoIds.isEmpty()) return;
 
