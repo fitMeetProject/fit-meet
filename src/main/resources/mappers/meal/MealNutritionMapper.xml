@@ -6,7 +6,7 @@
 <mapper namespace="com.ssafy.fitmeet.domain.meal.dao.MealNutritionDao">
 
     <resultMap id="MealNutritionMap" type="com.ssafy.fitmeet.domain.meal.entity.MealNutrition">
-        <id     property="id" column="id"/>
+        <id property="id" column="id"/>
         <result property="mealId" column="meal_id"/>
         <result property="baseAmountG" column="base_amount_g"/>
         <result property="kcal" column="kcal"/>

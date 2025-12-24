@@ -9,6 +9,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,29 +28,36 @@ public class TrainingEngagementSeeder {
      * - userIds 중에서 랜덤 선택
      */
     @Transactional
-    public void seedLikes(List<Long> userIds, List<Long> videoIds, int perVideoLikeMin, int perVideoLikeMax) {
+    public void seedLikes(
+            List<Long> userIds,
+            List<Long> videoIds,
+            int perVideoLikeMin,
+            int perVideoLikeMax
+    ) {
 
         if (userIds == null || userIds.isEmpty()) return;
         if (videoIds == null || videoIds.isEmpty()) return;
 
         for (Long videoId : videoIds) {
+
             int likeCnt = faker.number().numberBetween(perVideoLikeMin, perVideoLikeMax + 1);
             likeCnt = Math.min(likeCnt, userIds.size());
 
-            // 중복 없이 유저 선택
             Set<Long> pickedUsers = pickDistinct(userIds, likeCnt);
 
             for (Long userId : pickedUsers) {
                 try {
-                    // PK(user_id, video_id) 중복이면 DuplicateKeyException
-                    trainingVideoDao.insertLike(userId, videoId);
+                    LocalDateTime likedAt = LocalDateTime.now()
+                            .minusDays(faker.number().numberBetween(0, 30))
+                            .minusMinutes(faker.number().numberBetween(0, 1440));
+
+                    trainingVideoDao.insertLike(userId, videoId, likedAt);
                     trainingVideoDao.increaseLikeCount(videoId);
-                } catch (DuplicateKeyException ignore) {
-                    // 이미 좋아요 상태면 skip
-                }
+                } catch (DuplicateKeyException ignore) {}
             }
         }
     }
+
 
     /**
      * 댓글 시드
@@ -57,33 +65,48 @@ public class TrainingEngagementSeeder {
      * - deleteRate: soft delete 비율(0~100)
      */
     @Transactional
-    public void seedComments(List<Long> userIds, List<Long> videoIds, int perVideoCommentMin, int perVideoCommentMax, int deleteRate) {
+    public void seedComments(
+            List<Long> userIds,
+            List<Long> videoIds,
+            int perVideoCommentMin,
+            int perVideoCommentMax,
+            int deleteRate
+    ) {
 
         if (userIds == null || userIds.isEmpty()) return;
         if (videoIds == null || videoIds.isEmpty()) return;
 
         for (Long videoId : videoIds) {
+
             int commentCnt = faker.number().numberBetween(perVideoCommentMin, perVideoCommentMax + 1);
 
             for (int i = 0; i < commentCnt; i++) {
+
                 Long userId = userIds.get(faker.number().numberBetween(0, userIds.size()));
                 String content = faker.lorem().sentence(faker.number().numberBetween(4, 12));
+
+                LocalDateTime commentAt = LocalDateTime.now()
+                        .minusDays(faker.number().numberBetween(0, 30))
+                        .minusMinutes(faker.number().numberBetween(0, 1440))
+                        .plusSeconds(i); // 동일 시각 충돌 방지
 
                 TrainingVideoComment c = TrainingVideoComment.builder()
                         .videoId(videoId)
                         .userId(userId)
                         .content(content)
+                        .createdAt(commentAt)
+                        .updatedAt(commentAt)
                         .build();
 
                 trainingVideoCommentDao.insertComment(c);
 
-                // 일부 삭제 처리(테스트용)
                 if (deleteRate > 0 && faker.number().numberBetween(1, 101) <= deleteRate) {
                     trainingVideoCommentDao.softDelete(c.getId());
                 }
             }
         }
     }
+
 
     /**
      * 조회수 시드

@@ -4,6 +4,7 @@ import com.ssafy.fitmeet.domain.training.entity.TrainingVideo;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
@@ -31,7 +32,7 @@ public interface TrainingVideoDao {
     int decreaseLikeCount(@Param("id") Long id);
 
     Integer isLiked(@Param("userId") Long userId, @Param("videoId") Long videoId);
-    int insertLike(@Param("userId") Long userId, @Param("videoId") Long videoId);
+    int insertLike(@Param("userId") Long userId, @Param("videoId") Long videoId, @Param("createdAt") LocalDateTime createdAt);
     int deleteLike(@Param("userId") Long userId, @Param("videoId") Long videoId);
 
     // Seeding 용

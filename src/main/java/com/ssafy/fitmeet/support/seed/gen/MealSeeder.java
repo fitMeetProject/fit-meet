@@ -6,17 +6,18 @@ import com.ssafy.fitmeet.domain.meal.entity.Meal;
 import com.ssafy.fitmeet.domain.meal.entity.MealNutrition;
 import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Component
-@Profile({"local","dev"})
 @RequiredArgsConstructor
 public class MealSeeder {
 

@@ -2,6 +2,9 @@ package com.ssafy.fitmeet.support.seed;
 
 import com.ssafy.fitmeet.domain.training.dao.TrainingVideoDao;
 import com.ssafy.fitmeet.support.seed.dao.SeedHistoryDao;
+import com.ssafy.fitmeet.support.seed.demo.DemoSeedPlan;
+import com.ssafy.fitmeet.support.seed.demo.DemoUserSeeder;
+import com.ssafy.fitmeet.support.seed.demo.SeedFileProvisioner;
 import com.ssafy.fitmeet.support.seed.gen.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,6 +12,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 @Service
@@ -29,6 +34,9 @@ public class SeedService {
 
     private final CommunitySeeder communitySeeder;
 
+    private final DemoUserSeeder demoUserSeeder;
+    private final SeedFileProvisioner seedFileProvisioner;
+
     @Value("${app.seed.secret}")
     private String expectedSecret;
 
@@ -46,26 +54,34 @@ public class SeedService {
         try {
             seedHistoryDao.insert(SEED_NAME);
         } catch (DuplicateKeyException e) {
-            return; // 이미 실행됨
+            return;
         }
 
-        // 3) FK 순서: User -> BodyInfo -> Meal -> MealNutrition -> Diet -> Dashboard -> AI -> Training -> Community
+        // 3) 파일 provision (락 이후)
+        List<String> communityImages = seedFileProvisioner.provisionCommunityImages("seed-images/community-post");
+        List<String> profileImages = seedFileProvisioner.provisionProfileImages("seed-images/profile");
+
+        // 4) User
         List<Long> userIds = userSeeder.seedUsers(plan.getUsers());
         userSeeder.seedBodyInfos(userIds, plan.getBodyInfoRate());
 
+        // 4-1) 프로필 사진: 일반 유저도 넣기 (예: 60%)
+        userSeeder.seedProfileImages(userIds, profileImages, 60);
+
+        // 5) Meal
         List<Long> mealIds = mealSeeder.seedMeals(plan.getMeals());
         mealSeeder.seedMealNutrition(mealIds);
 
-        // Diet (dietIds 리턴 받으면 Community에서 활용 가능)
+        // 6) Diet
         List<Long> dietIds = dietSeeder.seedDiets(userIds, mealIds, plan.getDiets(), plan.getDietDaysRange());
 
-        // Dashboard
+        // 7) Dashboard
         dashboardSeeder.seedDailyScoreAndActivity(userIds, plan.getDashboardDaysRange());
 
-        // AI weekly logs
+        // 8) AI weekly logs
         dietAiLogSeeder.seedWeeklyAiLogs(userIds, plan.getAiWeeksBack(), plan.getAiLogsPerUserMax());
 
-        // Training
+        // 9) Training
         List<Long> videoIds = trainingVideoDao.findAllIds();
         trainingSeeder.seedWorkoutHistory(
                 userIds,
@@ -76,12 +92,12 @@ public class SeedService {
                 plan.getWorkoutPerDayMax()
         );
 
-        // Video engagement (views/likes/comments)
+        // 10) Video engagement
         trainingEngagementSeeder.seedViews(videoIds, plan.getPerVideoViewMin(), plan.getPerVideoViewMax());
         trainingEngagementSeeder.seedLikes(userIds, videoIds, plan.getPerVideoLikeMin(), plan.getPerVideoLikeMax());
         trainingEngagementSeeder.seedComments(userIds, videoIds, plan.getPerVideoCommentMin(), plan.getPerVideoCommentMax(), plan.getVideoCommentDeleteRate());
 
-        // Community (Diet/Video 공유를 위해 dietIds/videoIds 필요)
+        // 11) Community: 모든 유저 글에도 이미지 일부 포함 (예: 30%)
         communitySeeder.seedCommunity(
                 userIds,
                 dietIds,
@@ -90,7 +106,30 @@ public class SeedService {
                 plan.getCommunityDaysRange(),
                 plan.getCommunityLikeMaxPerPost(),
                 plan.getCommunityCommentMaxPerPost(),
-                plan.getCommunityCommentDeleteRate()
+                plan.getCommunityCommentDeleteRate(),
+                communityImages,
+                30
         );
+
+        // 12) Demo: 미리 만들어둔 데모 유저 기준으로 시딩
+        DemoSeedPlan demoPlan = DemoSeedPlan.defaultPlan();
+        Long demoUserId = demoPlan.getDemoUserId(); // ← 여기 중요
+
+        if (demoUserId == null) {
+            return;
+        }
+
+        // 데모 유저는 프로필 사진 100%
+        userSeeder.seedProfileImageForUser(demoUserId, profileImages);
+
+        // like/comment pool: 데모 + 일반 시드 유저
+        LinkedHashSet<Long> poolSet = new LinkedHashSet<>();
+        poolSet.add(demoUserId);
+        poolSet.addAll(userIds);
+        List<Long> likeCommentPool = new ArrayList<>(poolSet);
+
+        // 데모 전용 시딩 실행
+        demoUserSeeder.seedDemo(demoPlan, likeCommentPool, communityImages);
+
     }
 }

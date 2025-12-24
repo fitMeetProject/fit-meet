@@ -21,4 +21,6 @@ public interface MealDao {
 
     List<Meal> searchByKeyword(@Param("keyword") String keyword, @Param("category") String category);
 
+    List<Long> findAllIds();
+
 }

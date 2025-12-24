@@ -101,5 +101,11 @@
         AND deleted_at IS NULL
     </update>
 
+    <update id="updateProfileImageUrl">
+        UPDATE user
+        SET profile_image_url = #{profileImageUrl}
+        WHERE id = #{userId}
+    </update>
+
 
 </mapper>

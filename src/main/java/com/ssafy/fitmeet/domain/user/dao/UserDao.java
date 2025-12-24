@@ -32,4 +32,7 @@ public interface UserDao {
 
     // 파일이미지 업로드
     int updateProfileImage(@Param("id") Long id, @Param("profileImageUrl") String profileImageUrl);
+
+    void updateProfileImageUrl(Long userId, String profileImageUrl);
+
 }

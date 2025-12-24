@@ -104,7 +104,7 @@ public class TrainingVideoServiceImpl implements TrainingVideoService {
         Integer liked = trainingVideoDao.isLiked(userId, videoId);
 
         if (liked == null) {
-            trainingVideoDao.insertLike(userId, videoId);
+            trainingVideoDao.insertLike(userId, videoId, null);
             trainingVideoDao.increaseLikeCount(videoId);
             return true;
         } else {

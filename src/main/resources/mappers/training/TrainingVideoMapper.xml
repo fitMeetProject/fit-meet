@@ -108,7 +108,6 @@
     </select>
 
     <insert id="insertVideo" parameterType="com.ssafy.fitmeet.domain.training.entity.TrainingVideo" useGeneratedKeys="true" keyProperty="id">
-
         INSERT INTO training_video (
         youtube_video_id, title, description, thumbnail_url,
         duration_sec, main_category, level, tags,
@@ -125,10 +124,27 @@
         #{youtubeViewCnt}, #{youtubeLikeCnt}, #{publishedAt},
         #{isRecommended}, #{isActive},
         #{channelTitle},
-        NOW(), NOW()
+        <choose>
+            <when test="createdAt != null">#{createdAt}</when>
+            <otherwise>NOW()</otherwise>
+        </choose>,
+        <choose>
+            <when test="updatedAt != null">#{updatedAt}</when>
+            <otherwise>NOW()</otherwise>
+        </choose>
         )
     </insert>
 
+    <insert id="insertLike">
+        INSERT INTO training_video_like (user_id, video_id, created_at)
+        VALUES (
+        #{userId}, #{videoId},
+        <choose>
+            <when test="createdAt != null">#{createdAt}</when>
+            <otherwise>NOW()</otherwise>
+        </choose>
+        )
+    </insert>
 
     <update id="updateVideoFromYoutube" parameterType="com.ssafy.fitmeet.domain.training.entity.TrainingVideo">
         UPDATE training_video
@@ -162,11 +178,6 @@
         AND video_id = #{videoId}
         LIMIT 1
     </select>
-
-    <insert id="insertLike">
-        INSERT INTO training_video_like (user_id, video_id, created_at)
-        VALUES (#{userId}, #{videoId}, NOW())
-    </insert>
 
     <delete id="deleteLike">
         DELETE FROM training_video_like

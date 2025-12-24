@@ -146,7 +146,7 @@ public class UserDailyActivityServiceImpl implements UserDailyActivityService {
     @Transactional(readOnly = true)
     public DietStreakInfo getCurrentDietStreak(Long userId) {
         LocalDate today = LocalDate.now();
-        LocalDate fromDate = today.minusDays(30);
+        LocalDate fromDate = today.minusDays(100);
 
         List<DietActivityDay> days = getDietActivityRange(userId, fromDate, today);
 

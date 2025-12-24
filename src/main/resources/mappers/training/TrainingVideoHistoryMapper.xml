@@ -26,8 +26,7 @@
         LIMIT 1
     </select>
 
-    <insert id="insertHistory" parameterType="com.ssafy.fitmeet.domain.training.entity.TrainingVideoHistory"
-            useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertHistory" parameterType="com.ssafy.fitmeet.domain.training.entity.TrainingVideoHistory" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO training_video_history (
         user_id, video_id, activity_date,
         completed, duration_sec, memo,
@@ -35,7 +34,14 @@
         ) VALUES (
         #{userId}, #{videoId}, #{activityDate},
         #{completed}, #{durationSec}, #{memo},
-        NOW(), NOW()
+        <choose>
+            <when test="createdAt != null">#{createdAt}</when>
+            <otherwise>NOW()</otherwise>
+        </choose>,
+        <choose>
+            <when test="updatedAt != null">#{updatedAt}</when>
+            <otherwise>NOW()</otherwise>
+        </choose>
         )
     </insert>
 
@@ -44,9 +50,14 @@
         SET completed = #{completed},
         duration_sec = #{durationSec},
         memo = #{memo},
-        updated_at = NOW()
+        updated_at =
+        <choose>
+            <when test="updatedAt != null">#{updatedAt}</when>
+            <otherwise>NOW()</otherwise>
+        </choose>
         WHERE id = #{id}
     </update>
+
 
     <select id="findByUserAndDate" resultMap="TrainingVideoHistoryMap">
         SELECT *

@@ -61,13 +61,14 @@ public class CommunityServiceImpl implements CommunityService {
             postImageUrl = fileStorageService.storeCommunityPostImage(userId, image);
         }
 
+        LocalDate activityDate = (req.activityDate() != null) ? req.activityDate() : LocalDate.now();
         CommunityPost post = CommunityPost.builder()
                 .userId(userId)
                 .title(req.title())
                 .content(req.content())
                 .category(req.category() != null ? req.category() : "GENERAL")
                 .postImageUrl(postImageUrl)
-                .activityDate(req.activityDate())
+                .activityDate(activityDate)
                 .shareDiet(Boolean.TRUE.equals(req.shareDiet()))
                 .shareStreak(Boolean.TRUE.equals(req.shareStreak()))
                 .shareWorkout(Boolean.TRUE.equals(req.shareWorkout()))
@@ -331,7 +332,7 @@ public class CommunityServiceImpl implements CommunityService {
 
         if (likeDao.exists(postId, userId) > 0) return;
 
-        likeDao.insert(postId, userId);
+        likeDao.insert(postId, userId, null);
         postDao.updateLikeCount(postId, +1);
     }
 

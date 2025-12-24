@@ -39,7 +39,7 @@ public class UserSeeder {
 
             User u = new User();
             u.setEmail(email);
-            u.setPassword(passwordEncoder.encode("Password123!")); // 테스트용 고정 비번
+            u.setPassword(passwordEncoder.encode("Password123!"));
             u.setName(faker.name().fullName());
             u.setNickname("seed_" + faker.name().username() + "_" + i);
 
@@ -47,13 +47,13 @@ public class UserSeeder {
             u.setRole("ROLE_USER");
             u.setProfileImageUrl(null);
 
-            u.setEmailVerified(true); // 개발 편의
+            u.setEmailVerified(true);
             u.setLastLoginAt(null);
             u.setPasswordChangedAt(
                     LocalDateTime.now().minusDays(faker.number().numberBetween(1, 60))
             );
 
-            userDao.insertUser(u); // useGeneratedKeys → id 세팅
+            userDao.insertUser(u);
             userIds.add(u.getId());
         }
 
@@ -61,11 +61,39 @@ public class UserSeeder {
     }
 
     /**
+     * 프로필 이미지 URL 업데이트(일부 유저만)
+     * @param userIds 대상 유저들
+     * @param profileUrls provision된 프로필 이미지 URL 풀
+     * @param ratePercent 0~100 (예: 60이면 60% 확률로 프로필사진 부여)
+     */
+    public void seedProfileImages(List<Long> userIds, List<String> profileUrls, int ratePercent) {
+        if (userIds == null || userIds.isEmpty()) return;
+        if (profileUrls == null || profileUrls.isEmpty()) return;
+
+        for (Long userId : userIds) {
+            if (faker.number().numberBetween(0, 100) >= ratePercent) continue;
+
+            String url = profileUrls.get(faker.number().numberBetween(0, profileUrls.size()));
+            userDao.updateProfileImageUrl(userId, url);
+        }
+    }
+
+    /**
+     * 데모 유저는 100% 프로필 사진 지정 (항상 눈에 띄게)
+     */
+    public void seedProfileImageForUser(Long userId, List<String> profileUrls) {
+        if (userId == null) return;
+        if (profileUrls == null || profileUrls.isEmpty()) return;
+
+        String url = profileUrls.get(faker.number().numberBetween(0, profileUrls.size()));
+        userDao.updateProfileImageUrl(userId, url);
+    }
+
+    /**
      * UserBodyInfo 생성 (일부만)
      */
     public void seedBodyInfos(List<Long> userIds, int bodyInfoRate) {
         for (Long userId : userIds) {
-            // bodyInfoRate% 확률로 생성
             if (faker.number().numberBetween(1, 101) > bodyInfoRate) continue;
 
             UserBodyInfo info = new UserBodyInfo();
@@ -73,9 +101,7 @@ public class UserSeeder {
 
             Double height = round2(faker.number().randomDouble(2, 150, 195));
             Double weight = round2(faker.number().randomDouble(2, 45, 110));
-            Double target = round2(
-                    Math.max(40.0, weight - faker.number().numberBetween(0, 10))
-            );
+            Double target = round2(Math.max(40.0, weight - faker.number().numberBetween(0, 10)));
 
             info.setHeightCm(height);
             info.setWeightKg(weight);
@@ -120,9 +146,6 @@ public class UserSeeder {
         }
     }
 
-    /**
-     * 소수 둘째 자리 반올림
-     */
     private Double round2(double v) {
         return Math.round(v * 100) / 100.0;
     }

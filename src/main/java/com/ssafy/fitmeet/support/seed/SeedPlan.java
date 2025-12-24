@@ -8,8 +8,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SeedPlan {
-
-    // ===== 기존 필드들 (너희 프로젝트에 이미 있던 것들) =====
     private int users;
     private int meals;
     private int diets;
@@ -34,11 +32,11 @@ public class SeedPlan {
     private int perVideoCommentMax;
     private int videoCommentDeleteRate;
 
-    private int communityPosts; // 생성할 게시글 수
-    private int communityDaysRange; // 최근 N일 범위로 activityDate/createdAt 생성
-    private int communityLikeMaxPerPost; // 게시글당 최대 좋아요 수
-    private int communityCommentMaxPerPost; // 게시글당 최대 댓글 수
-    private int communityCommentDeleteRate; // 댓글 soft delete 확률(0~100)
+    private int communityPosts;
+    private int communityDaysRange;
+    private int communityLikeMaxPerPost;
+    private int communityCommentMaxPerPost;
+    private int communityCommentDeleteRate;
 
     public static SeedPlan defaultPlan() {
         return SeedPlan.builder()

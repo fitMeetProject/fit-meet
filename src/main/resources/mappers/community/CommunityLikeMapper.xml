@@ -8,7 +8,13 @@
     <!-- 좋아요 추가 -->
     <insert id="insert">
         INSERT INTO `community_post_like` (`post_id`, `user_id`, `created_at`)
-        VALUES (#{postId}, #{userId}, NOW())
+        VALUES (
+        #{postId}, #{userId},
+        <choose>
+            <when test="createdAt != null">#{createdAt}</when>
+            <otherwise>NOW()</otherwise>
+        </choose>
+        )
     </insert>
 
     <!-- 좋아요 취소 -->

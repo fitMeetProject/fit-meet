@@ -1,22 +1,31 @@
 package com.ssafy.fitmeet.support.seed.gen;
 
-import com.ssafy.fitmeet.domain.diet.dao.*;
-import com.ssafy.fitmeet.domain.diet.entity.*;
+import com.ssafy.fitmeet.domain.diet.dao.DietDao;
+import com.ssafy.fitmeet.domain.diet.dao.DietInfoDao;
+import com.ssafy.fitmeet.domain.diet.dao.DietScoreDao;
+import com.ssafy.fitmeet.domain.diet.dao.UserDailyNutritionDao;
+import com.ssafy.fitmeet.domain.diet.entity.Diet;
+import com.ssafy.fitmeet.domain.diet.entity.DietInfo;
+import com.ssafy.fitmeet.domain.diet.entity.DietScore;
+import com.ssafy.fitmeet.domain.diet.entity.UserDailyNutrition;
 import com.ssafy.fitmeet.domain.meal.dao.MealNutritionDao;
 import com.ssafy.fitmeet.domain.meal.entity.MealNutrition;
 import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.*;
-import java.util.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Component
-@Profile({"local","dev"})
 @RequiredArgsConstructor
 public class DietSeeder {
 
@@ -182,6 +191,126 @@ public class DietSeeder {
             }
         }
     }
+
+    @Transactional
+    public List<Long> seedDietsForUser(
+            Long userId,
+            List<Long> mealIds,
+            int daysRange,
+            int perDayMin,
+            int perDayMax
+    ) {
+        List<Long> userIds = List.of(userId);
+        List<Long> dietIds = new ArrayList<>();
+        Set<UserDateKey> touched = new HashSet<>();
+
+        LocalDate today = LocalDate.now();
+        LocalDate from = today.minusDays(daysRange);
+
+        for (LocalDate d = from; !d.isAfter(today); d = d.plusDays(1)) {
+            int make = faker.number().numberBetween(perDayMin, perDayMax + 1);
+
+            for (int i = 0; i < make; i++) {
+
+                LocalTime time = LocalTime.of(
+                        faker.number().numberBetween(6, 23),
+                        faker.number().numberBetween(0, 60)
+                );
+                LocalDateTime dateTime = LocalDateTime.of(d, time);
+
+                String mealType = pickOne(List.of("A","B","C","D","E"));
+
+                int itemCnt = faker.number().numberBetween(2, 5);
+                List<DietInfo> infos = new ArrayList<>(itemCnt);
+
+                BigDecimal totalKcal = bd0();
+                BigDecimal totalCarb = bd0();
+                BigDecimal totalProtein = bd0();
+                BigDecimal totalFat = bd0();
+                BigDecimal totalSugar = bd0();
+                BigDecimal totalSodium = bd0();
+
+                for (int k = 0; k < itemCnt; k++) {
+                    Long mealId = pickOne(mealIds);
+                    MealNutrition base = mealNutritionDao.findByMealId(mealId);
+                    if (base == null) continue;
+
+                    BigDecimal intakeGram = bd3(faker.number().randomDouble(0, 50, 250));
+                    BigDecimal baseG = nz(base.getBaseAmountG(), bd3(100));
+                    BigDecimal ratio = intakeGram.divide(baseG, 8, RoundingMode.HALF_UP);
+
+                    BigDecimal kcal = mul3(base.getKcal(), ratio);
+                    BigDecimal carb = mul3(base.getCarbohydrate(), ratio);
+                    BigDecimal protein = mul3(base.getProtein(), ratio);
+                    BigDecimal fat = mul3(base.getFat(), ratio);
+                    BigDecimal sugar = mul3(base.getSugar(), ratio);
+                    BigDecimal sodium = mul3(base.getSodium(), ratio);
+                    BigDecimal fiber = mul3(base.getDietaryFiber(), ratio);
+
+                    DietInfo di = new DietInfo();
+                    di.setMealId(mealId);
+                    di.setFoodNmKr("DEMO_FOOD_" + faker.food().dish());
+                    di.setFoodCode(null);
+                    di.setSourceType("PUBLIC_API");
+                    di.setIntakeGram(intakeGram);
+
+                    di.setKcal(kcal);
+                    di.setCarbohydrate(carb);
+                    di.setProtein(protein);
+                    di.setFat(fat);
+                    di.setSugar(sugar);
+                    di.setSodium(sodium);
+                    di.setDietaryFiber(fiber);
+
+                    infos.add(di);
+
+                    totalKcal = totalKcal.add(kcal);
+                    totalCarb = totalCarb.add(carb);
+                    totalProtein = totalProtein.add(protein);
+                    totalFat = totalFat.add(fat);
+                    totalSugar = totalSugar.add(sugar);
+                    totalSodium = totalSodium.add(sodium);
+                }
+
+                Diet diet = new Diet();
+                diet.setUserId(userId);
+                diet.setDate(dateTime);
+                diet.setMealType(mealType);
+                diet.setDescription(faker.bool().bool() ? faker.lorem().sentence(5) : "데모 식단 기록");
+                diet.setImageUrl(null);
+                diet.setSourceType("MANUAL");
+
+                diet.setTotalKcal(bd3(totalKcal));
+                diet.setTotalCarbohydrate(bd3(totalCarb));
+                diet.setTotalProtein(bd3(totalProtein));
+                diet.setTotalFat(bd3(totalFat));
+                diet.setTotalSugar(bd3(totalSugar));
+                diet.setTotalSodium(bd3(totalSodium));
+                diet.setIsPublic(true); // 데모는 공개가 많아야 커뮤니티 연동 시연이 편함
+
+                dietDao.insert(diet);
+                Long dietId = diet.getId();
+                dietIds.add(dietId);
+
+                for (DietInfo di : infos) di.setDietId(dietId);
+                if (!infos.isEmpty()) dietInfoDao.insertBatch(infos);
+
+                DietScore ds = new DietScore();
+                ds.setDietId(dietId);
+                int score = faker.number().numberBetween(60, 96); // 데모는 너무 낮게 안 나오게
+                ds.setScore(score);
+                ds.setGrade(grade(score));
+                ds.setFeedback(seedFeedback(score));
+                dietScoreDao.insert(ds);
+
+                touched.add(new UserDateKey(userId, d));
+            }
+        }
+
+        upsertUserDailyNutrition(touched);
+        return dietIds;
+    }
+
 
     // ---------- helpers ----------
 

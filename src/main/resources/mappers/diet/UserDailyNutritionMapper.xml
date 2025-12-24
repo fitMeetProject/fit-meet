@@ -47,37 +47,29 @@
     </select>
 
     <!-- insert -->
-    <insert id="insert" parameterType="com.ssafy.fitmeet.domain.diet.entity.UserDailyNutrition">
+    <insert id="insert">
         INSERT INTO user_daily_nutrition (
-        user_id,
-        `date`,
-        total_kcal,
-        total_carbohydrate,
-        total_protein,
-        total_fat,
-        total_sugar,
-        total_sodium,
-        diet_score_avg,
-        diet_score_sum,
-        meal_count,
-        created_at,
-        updated_at
+        user_id, `date`,
+        total_kcal, total_carbohydrate, total_protein, total_fat,
+        total_sugar, total_sodium,
+        diet_score_avg, diet_score_sum, meal_count,
+        created_at, updated_at
         ) VALUES (
-        #{userId},
-        #{date},
-        #{totalKcal},
-        #{totalCarbohydrate},
-        #{totalProtein},
-        #{totalFat},
-        #{totalSugar},
-        #{totalSodium},
-        #{dietScoreAvg},
-        #{dietScoreSum},
-        #{mealCount},
-        NOW(),
-        NOW()
+        #{userId}, #{date},
+        #{totalKcal}, #{totalCarbohydrate}, #{totalProtein}, #{totalFat},
+        #{totalSugar}, #{totalSodium},
+        #{dietScoreAvg}, #{dietScoreSum}, #{mealCount},
+        <choose>
+            <when test="createdAt != null">#{createdAt}</when>
+            <otherwise>NOW()</otherwise>
+        </choose>,
+        <choose>
+            <when test="updatedAt != null">#{updatedAt}</when>
+            <otherwise>NOW()</otherwise>
+        </choose>
         )
     </insert>
+
 
     <!-- update -->
     <update id="update" parameterType="com.ssafy.fitmeet.domain.diet.entity.UserDailyNutrition">

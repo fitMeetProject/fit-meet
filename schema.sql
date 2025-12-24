@@ -1,45 +1,100 @@
+/* =========================================================
+   FitMeet - DDL (Workbench one-shot 실행용)
+   - FK 의존성 고려한 생성 순서
+========================================================= */
+
+SET FOREIGN_KEY_CHECKS = 0;
+
 DROP DATABASE IF EXISTS fitmeet;
 CREATE DATABASE IF NOT EXISTS fitmeet;
 USE fitmeet;
 
--- 회원 기본정보
+/* =========================================================
+   1) DROP TABLES (의존성 고려, 혹은 FK 체크 OFF 상태로 안전)
+========================================================= */
+
+DROP TABLE IF EXISTS seed_history;
+
+-- AI / Dashboard
+DROP TABLE IF EXISTS diet_ai_weekly_analysis_log;
+DROP TABLE IF EXISTS user_daily_activity;
+DROP TABLE IF EXISTS user_daily_nutrition;
+DROP TABLE IF EXISTS user_daily_score;
+
+-- Training (자식부터)
+DROP TABLE IF EXISTS training_video_comment;
+DROP TABLE IF EXISTS training_video_history;
+DROP TABLE IF EXISTS training_video_like;
+DROP TABLE IF EXISTS training_youtube_source;
+DROP TABLE IF EXISTS training_video;
+
+-- Community (자식부터)
+DROP TABLE IF EXISTS community_comment;
+DROP TABLE IF EXISTS community_post_like;
+DROP TABLE IF EXISTS community_post_tag;
+DROP TABLE IF EXISTS community_tag;
+DROP TABLE IF EXISTS community_post_video;
+DROP TABLE IF EXISTS community_post_diet;
+DROP TABLE IF EXISTS community_post;
+
+-- Diet (자식부터)
+DROP TABLE IF EXISTS diet_info;
+DROP TABLE IF EXISTS diet_score;
+DROP TABLE IF EXISTS diet;
+
+-- Meal master (자식부터)
+DROP TABLE IF EXISTS meal_nutrition;
+DROP TABLE IF EXISTS meal;
+
+-- Auth/User (자식부터)
+DROP TABLE IF EXISTS user_refresh_token;
+DROP TABLE IF EXISTS password_reset_token;
+DROP TABLE IF EXISTS user_body_info;
 DROP TABLE IF EXISTS `user`;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+
+/* =========================================================
+   2) CREATE TABLES (부모 → 자식 순)
+========================================================= */
+
+-- 2-1. USER (부모)
 CREATE TABLE `user` (
-                        `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, -- 기본키 (PK)
-                        `email` VARCHAR(100) NOT NULL, -- 계정 이메일
-                        `password` VARCHAR(255) NOT NULL, -- 비밀번호
-                        `name` VARCHAR(50) NOT NULL, -- 실명(또는 이름)
-                        `nickname` VARCHAR(50) NOT NULL, -- 서비스 내에서 사용하는 닉네임
-                        `status` VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', -- 계정 상태 ( ACTIVE : 정상, WITHDRAWN : 탈퇴, SUSPENDED : 정지 )
-                        `role` VARCHAR(30) NOT NULL DEFAULT 'ROLE_USER', -- 권한 ( ROLE_USER : 사용자, ROLE_ADMIN : 관리자 )
-                        `profile_image_url` VARCHAR(255) NULL, -- 프로필 경로 ( URL ? 문자열 ? )
-                        `email_verified` TINYINT(1) NOT NULL DEFAULT 0, -- 이메일 인증 여부 ( 0 : 미인증, 1 : 인증 )
-                        `last_login_at` DATETIME NULL, -- 마지막 로그인 시간
-                        `password_changed_at` DATETIME NULL, -- 마지막 비밀번호 변경 시각
-                        `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 계정 생성 시각
-                        `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- 계정 정보 수정 시각
-                        `deleted_at` DATETIME NULL, -- 소프트 삭제 ( 탈퇴 처리 시각 )
+                        `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                        `email` VARCHAR(100) NOT NULL,
+                        `password` VARCHAR(255) NOT NULL,
+                        `name` VARCHAR(50) NOT NULL,
+                        `nickname` VARCHAR(50) NOT NULL,
+                        `status` VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+                        `role` VARCHAR(30) NOT NULL DEFAULT 'ROLE_USER',
+                        `profile_image_url` VARCHAR(255) NULL,
+                        `email_verified` TINYINT(1) NOT NULL DEFAULT 0,
+                        `last_login_at` DATETIME NULL,
+                        `password_changed_at` DATETIME NULL,
+                        `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        `deleted_at` DATETIME NULL,
                         PRIMARY KEY (`id`),
                         UNIQUE KEY `uk_user_email` (`email`),
                         KEY `idx_user_status` (`status`),
                         KEY `idx_user_role` (`role`)
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- 회원 신체정보
-DROP TABLE IF EXISTS `user_body_info`;
+-- 2-2. USER 하위
 CREATE TABLE `user_body_info` (
-                                  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, -- 고유 ID ( PK )
-                                  `user_id` BIGINT UNSIGNED NOT NULL, -- 회원 아이디 ( user.id FK )
-                                  `height_cm` DECIMAL(5,2) NULL, -- 키 소수점 둘째자리, cm
-                                  `weight_kg` DECIMAL(5,2) NULL, -- 몸무게 소수점 둘째자리, kg
-                                  `target_weight_kg` DECIMAL(5,2) NULL, -- 목표 몸무게 소수점 둘째자리, kg
-                                  `gender` VARCHAR(10) NULL, -- 성별 ( MALE, FEMALE, OTHER )
-                                  `birth_date` DATE NULL, -- 생년월일
-                                  `activity_level` VARCHAR(20) NULL, -- 활동량 수준 ( NONE, LOW, MID, HIGH )
-                                  `bmr` INT NULL, -- 기초대사량
-                                  `daily_kcal` INT NULL, -- 하루 권장 섭취 칼로리
-                                  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 정보 등록 시각
-                                  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- 정보 수정 시각
+                                  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                                  `user_id` BIGINT UNSIGNED NOT NULL,
+                                  `height_cm` DECIMAL(5,2) NULL,
+                                  `weight_kg` DECIMAL(5,2) NULL,
+                                  `target_weight_kg` DECIMAL(5,2) NULL,
+                                  `gender` VARCHAR(10) NULL,
+                                  `birth_date` DATE NULL,
+                                  `activity_level` VARCHAR(20) NULL,
+                                  `bmr` INT NULL,
+                                  `daily_kcal` INT NULL,
+                                  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                                   PRIMARY KEY (`id`),
                                   CONSTRAINT `fk_user_body_info_user`
                                       FOREIGN KEY (`user_id`) REFERENCES `user`(`id`)
@@ -48,15 +103,13 @@ CREATE TABLE `user_body_info` (
                                   KEY `idx_user_body_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- 비밀번호 재설정 토큰 ( 이메일 재설정 )
-DROP TABLE IF EXISTS `password_reset_token`;
 CREATE TABLE `password_reset_token` (
-                                        `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, -- 비밀번호 재설정 토큰 ID ( PK )
-                                        `user_id` BIGINT UNSIGNED NOT NULL, -- 회원 ID (user.id FK)
-                                        `token` VARCHAR(100) NOT NULL, -- 비밀번호 재설정용 토큰 문자열 ( 이메일로 보낼 UUID ? )
-                                        `expires_at` DATETIME NOT NULL, -- 토큰 만료 시각
-                                        `used` TINYINT(1) NOT NULL DEFAULT 0, -- 토큰 사용 여부 ( 0 : 미사용, 1 : 사용 )
-                                        `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 토큰 생성 시각
+                                        `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                                        `user_id` BIGINT UNSIGNED NOT NULL,
+                                        `token` VARCHAR(100) NOT NULL,
+                                        `expires_at` DATETIME NOT NULL,
+                                        `used` TINYINT(1) NOT NULL DEFAULT 0,
+                                        `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                         PRIMARY KEY (`id`),
                                         UNIQUE KEY `uk_password_reset_token_token` (`token`),
                                         KEY `idx_password_reset_token_user_used` (`user_id`, `used`),
@@ -66,11 +119,10 @@ CREATE TABLE `password_reset_token` (
                                                 ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- 리프레시 토큰 저장 테이블
 CREATE TABLE `user_refresh_token` (
-                                      `user_id` BIGINT UNSIGNED NOT NULL, -- USER.id (FK)
-                                      `refresh_token` VARCHAR(512) NOT NULL, -- 리프레시 토큰 문자열 (JWT)
-                                      `expires_at` DATETIME NOT NULL, -- 리프레시 토큰 만료 시각
+                                      `user_id` BIGINT UNSIGNED NOT NULL,
+                                      `refresh_token` VARCHAR(512) NOT NULL,
+                                      `expires_at` DATETIME NOT NULL,
                                       `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                       `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                                       PRIMARY KEY (`user_id`),
@@ -78,26 +130,76 @@ CREATE TABLE `user_refresh_token` (
                                           FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
-######################### 식단 #########################
 
--- 식단 입력 테이블
-DROP TABLE IF EXISTS `diet`;
+/* =========================================================
+   2-3. MEAL MASTER
+========================================================= */
+
+CREATE TABLE `meal` (
+                        `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                        `food_cd` VARCHAR(50) NOT NULL,
+                        `food_nm_kr` VARCHAR(100) NOT NULL,
+                        `db_grp_cm` VARCHAR(5) NOT NULL,
+                        `db_grp_nm` VARCHAR(20) NOT NULL,
+                        `food_cat1_cd` VARCHAR(10) NULL,
+                        `food_cat1_nm` VARCHAR(50) NULL,
+                        `food_cat2_cd` VARCHAR(10) NULL,
+                        `food_cat2_nm` VARCHAR(50) NULL,
+                        `food_cat3_cd` VARCHAR(10) NULL,
+                        `food_cat3_nm` VARCHAR(50) NULL,
+                        `serving_size_raw` VARCHAR(50) NOT NULL,
+                        `source_type` VARCHAR(20) NOT NULL DEFAULT 'PUBLIC_API',
+                        `category` VARCHAR(50) NULL,
+                        `brand` VARCHAR(100) NULL,
+                        `tags` VARCHAR(255) NULL,
+                        `update_date` DATE NULL,
+                        `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        PRIMARY KEY (`id`),
+                        UNIQUE KEY `uk_meal_food_cd` (`food_cd`),
+                        KEY `idx_meal_cat1` (`food_cat1_cd`),
+                        KEY `idx_meal_cat2` (`food_cat2_cd`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `meal_nutrition` (
+                                  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                                  `meal_id` BIGINT UNSIGNED NOT NULL,
+                                  `base_amount_g` DECIMAL(8,3) NOT NULL,
+                                  `kcal` DECIMAL(8,3) DEFAULT NULL,
+                                  `carbohydrate` DECIMAL(8,3) DEFAULT NULL,
+                                  `protein` DECIMAL(8,3) DEFAULT NULL,
+                                  `fat` DECIMAL(8,3) DEFAULT NULL,
+                                  `sugar` DECIMAL(8,3) DEFAULT NULL,
+                                  `sodium` DECIMAL(10,3) DEFAULT NULL,
+                                  `dietary_fiber` DECIMAL(8,3) DEFAULT NULL,
+                                  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                                  PRIMARY KEY (`id`),
+                                  KEY `idx_meal_nutrition_meal_id` (`meal_id`),
+                                  CONSTRAINT `fk_meal_nutrition_meal`
+                                      FOREIGN KEY (`meal_id`) REFERENCES `meal`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+/* =========================================================
+   2-4. DIET (user 참조), DIET 하위 (diet_score, diet_info)
+========================================================= */
+
 CREATE TABLE `diet` (
-                        `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, -- 기본키 (PK)
-                        `user_id` BIGINT UNSIGNED NOT NULL, -- 회원 ID (FK)
-                        `date` DATETIME NOT NULL, -- 식단 날짜/시간
-                        `meal_type` CHAR(1) NOT NULL, -- 식단 종류 (A:아침, B:점심, C:저녁, D:간식, E:야식)
-                        `description` VARCHAR(255), -- 메모
-                        `image_url` VARCHAR(255), -- 이미지 URL
-                        `source_type` VARCHAR(20) NOT NULL DEFAULT 'MANUAL', -- 입력/분석 관련 메타 정보 (MANUAL: 직접입력, IMAGE: 이미지분석, API: 공공데이터 기반)
-    -- 식단 전체 요약
-                        `total_kcal` DECIMAL(8,3) DEFAULT NULL, -- 총 칼로리
-                        `total_carbohydrate` DECIMAL(8,3) DEFAULT NULL, -- 총 탄수화물
-                        `total_protein` DECIMAL(8,3) DEFAULT NULL, -- 총 단백질
-                        `total_fat` DECIMAL(8,3) DEFAULT NULL, -- 총 지방
-                        `total_sugar` DECIMAL(8,3) DEFAULT NULL,-- 총 당류
-                        `total_sodium` DECIMAL(10,3) DEFAULT NULL,-- 총 나트륨
-                        `is_public` TINYINT(1) NOT NULL DEFAULT 0, -- 커뮤니티 공개 여부 (0:비공개, 1:공개)
+                        `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                        `user_id` BIGINT UNSIGNED NOT NULL,
+                        `date` DATETIME NOT NULL,
+                        `meal_type` CHAR(1) NOT NULL,
+                        `description` VARCHAR(255),
+                        `image_url` VARCHAR(255),
+                        `source_type` VARCHAR(20) NOT NULL DEFAULT 'MANUAL',
+                        `total_kcal` DECIMAL(8,3) DEFAULT NULL,
+                        `total_carbohydrate` DECIMAL(8,3) DEFAULT NULL,
+                        `total_protein` DECIMAL(8,3) DEFAULT NULL,
+                        `total_fat` DECIMAL(8,3) DEFAULT NULL,
+                        `total_sugar` DECIMAL(8,3) DEFAULT NULL,
+                        `total_sodium` DECIMAL(10,3) DEFAULT NULL,
+                        `is_public` TINYINT(1) NOT NULL DEFAULT 0,
                         `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                         `deleted_at` DATETIME NULL,
@@ -108,32 +210,28 @@ CREATE TABLE `diet` (
                             FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- 식단 점수 테이블
-DROP TABLE IF EXISTS `diet_score`;
 CREATE TABLE `diet_score` (
-                              `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, -- 기본키 (PK)
-                              `diet_id` BIGINT UNSIGNED NOT NULL, -- 식단 ID (FK)
-                              `score` INT NOT NULL DEFAULT 0, -- 점수 (0~100 권장)
-                              `grade` CHAR(1) DEFAULT NULL, -- 등급 (A~E 등)
-                              `feedback` VARCHAR(255) DEFAULT NULL, -- 간단 코멘트
+                              `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                              `diet_id` BIGINT UNSIGNED NOT NULL,
+                              `score` INT NOT NULL DEFAULT 0,
+                              `grade` CHAR(1) DEFAULT NULL,
+                              `feedback` VARCHAR(255) DEFAULT NULL,
                               `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                               `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                               PRIMARY KEY (`id`),
-                              UNIQUE KEY `uk_diet_score_diet_id` (`diet_id`),    -- 한 식단에 점수 1개 가정
+                              UNIQUE KEY `uk_diet_score_diet_id` (`diet_id`),
                               CONSTRAINT `fk_diet_score_diet_id`
                                   FOREIGN KEY (`diet_id`) REFERENCES `diet`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
-DROP TABLE IF EXISTS `user_daily_score`;
 CREATE TABLE `user_daily_score` (
                                     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
                                     `user_id` BIGINT UNSIGNED NOT NULL,
-                                    `date` DATE NOT NULL, -- YYYY-MM-DD (하루 단위)
-                                    `score` INT NOT NULL DEFAULT 0, -- 0~100
-                                    `grade` CHAR(1) DEFAULT NULL, -- A~E
+                                    `date` DATE NOT NULL,
+                                    `score` INT NOT NULL DEFAULT 0,
+                                    `grade` CHAR(1) DEFAULT NULL,
                                     `feedback` VARCHAR(255) DEFAULT NULL,
-    -- 계산 기준 스냅샷
-                                    `daily_kcal` INT DEFAULT NULL, -- 당시 dailyKcal
+                                    `daily_kcal` INT DEFAULT NULL,
                                     `total_kcal` DECIMAL(8,3) DEFAULT 0,
                                     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -143,23 +241,21 @@ CREATE TABLE `user_daily_score` (
                                         FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- 식단 정보 테이블
-DROP TABLE IF EXISTS `diet_info`;
 CREATE TABLE `diet_info` (
-                             `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, -- 기본키 (PK)
-                             `diet_id` BIGINT UNSIGNED NOT NULL, -- 식단 ID (FK)
-                             `meal_id` BIGINT UNSIGNED NULL, -- 음식 마스터 ID (meal.id)
-                             `food_nm_kr` VARCHAR(100) NOT NULL, -- 음식 이름 (한글)
-                             `food_code` VARCHAR(50) DEFAULT NULL, -- 공공데이터/내부 음식 코드
-                             `source_type` VARCHAR(20) NOT NULL DEFAULT 'PUBLIC_API', -- ( PUBLIC_API / MANUAL / MODEL 등 )
-                             `intake_gram` DECIMAL(8,3) DEFAULT NULL, -- 섭취 무게 (g)
-                             `kcal` DECIMAL(8,3) DEFAULT NULL, -- 칼로리
-                             `carbohydrate` DECIMAL(8,3) DEFAULT NULL, -- 탄수화물
-                             `protein` DECIMAL(8,3) DEFAULT NULL, -- 단백질
-                             `fat` DECIMAL(8,3) DEFAULT NULL, -- 지방
-                             `sugar` DECIMAL(8,3) DEFAULT NULL, -- 당류
-                             `sodium` DECIMAL(10,3) DEFAULT NULL, -- 나트륨
-                             `dietary_fiber` DECIMAL(8,3) DEFAULT NULL, -- 식이섬유
+                             `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                             `diet_id` BIGINT UNSIGNED NOT NULL,
+                             `meal_id` BIGINT UNSIGNED NULL,
+                             `food_nm_kr` VARCHAR(100) NOT NULL,
+                             `food_code` VARCHAR(50) DEFAULT NULL,
+                             `source_type` VARCHAR(20) NOT NULL DEFAULT 'PUBLIC_API',
+                             `intake_gram` DECIMAL(8,3) DEFAULT NULL,
+                             `kcal` DECIMAL(8,3) DEFAULT NULL,
+                             `carbohydrate` DECIMAL(8,3) DEFAULT NULL,
+                             `protein` DECIMAL(8,3) DEFAULT NULL,
+                             `fat` DECIMAL(8,3) DEFAULT NULL,
+                             `sugar` DECIMAL(8,3) DEFAULT NULL,
+                             `sodium` DECIMAL(10,3) DEFAULT NULL,
+                             `dietary_fiber` DECIMAL(8,3) DEFAULT NULL,
                              `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                              `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                              PRIMARY KEY (`id`),
@@ -171,62 +267,99 @@ CREATE TABLE `diet_info` (
                                  FOREIGN KEY (`meal_id`) REFERENCES `meal`(`id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
-######################### 음식 마스터 #########################
 
--- 음식 마스터 테이블 (공공데이터 + 커스텀 + 모델 공통)
-DROP TABLE IF EXISTS `meal`;
-CREATE TABLE `meal` (
-                        `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-                        `food_cd` VARCHAR(50) NOT NULL, -- FOOD_CD (공공데이터 식품코드)
-                        `food_nm_kr` VARCHAR(100) NOT NULL, -- FOOD_NM_KR (식품명)
-                        `db_grp_cm` VARCHAR(5) NOT NULL, -- DB_GRP_CM (데이터 구분 코드: D=음식 등)
-                        `db_grp_nm` VARCHAR(20) NOT NULL, -- DB_GRP_NM (데이터 구분명)
+/* =========================================================
+   2-5. TRAINING VIDEO
+========================================================= */
 
-                        `food_cat1_cd` VARCHAR(10) NULL, -- FOOD_CAT1_CD (대분류 코드)
-                        `food_cat1_nm` VARCHAR(50) NULL, -- FOOD_CAT1_NM (대분류명)
-                        `food_cat2_cd` VARCHAR(10) NULL, -- FOOD_CAT2_CD (중분류 코드)
-                        `food_cat2_nm` VARCHAR(50) NULL, -- FOOD_CAT2_NM (중분류명)
-                        `food_cat3_cd` VARCHAR(10) NULL, -- FOOD_CAT3_CD (소분류 코드)
-                        `food_cat3_nm` VARCHAR(50) NULL, -- FOOD_CAT3_NM (소분류명)
-                        `serving_size_raw` VARCHAR(50) NOT NULL, -- SERVING_SIZE
-                        `source_type` VARCHAR(20) NOT NULL DEFAULT 'PUBLIC_API', -- PUBLIC_API / CUSTOM / MODEL
-                        `category` VARCHAR(50) NULL, -- 상위 카테고리 (예: 밥류, 국/탕류 등)
-                        `brand` VARCHAR(100) NULL, -- 브랜드/제조사
-                        `tags` VARCHAR(255) NULL, -- "고단백,저탄수,다이어트" 같은 태그 문자열
-                        `update_date` DATE NULL, -- 공공데이터 기준 최신일자
-                        `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                        PRIMARY KEY (`id`),
-                        UNIQUE KEY `uk_meal_food_cd` (`food_cd`),
-                        KEY `idx_meal_cat1` (`food_cat1_cd`),
-                        KEY `idx_meal_cat2` (`food_cat2_cd`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE `training_video` (
+                                  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                                  `youtube_video_id` VARCHAR(50) NOT NULL,
+                                  `title` VARCHAR(200) NOT NULL,
+                                  `description` TEXT NULL,
+                                  `thumbnail_url` VARCHAR(255) NOT NULL,
+                                  `duration_sec` INT NOT NULL,
+                                  `main_category` VARCHAR(50) NOT NULL,
+                                  `level` VARCHAR(20) NULL,
+                                  `tags` VARCHAR(255) NULL,
+                                  `view_count` BIGINT NOT NULL DEFAULT 0,
+                                  `like_count` BIGINT NOT NULL DEFAULT 0,
+                                  `youtube_view_cnt` BIGINT NULL,
+                                  `youtube_like_cnt` BIGINT NULL,
+                                  `published_at` DATETIME NULL,
+                                  `is_recommended` TINYINT(1) NOT NULL DEFAULT 0,
+                                  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+                                  `channel_title` VARCHAR(200) NULL,
+                                  `created_at` DATETIME NOT NULL,
+                                  `updated_at` DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- 100g(또는 SERVING_SIZE 기준) 영양 성분
-DROP TABLE IF EXISTS `meal_nutrition`;
-CREATE TABLE `meal_nutrition` (
-                                  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, -- PK
-                                  `meal_id` BIGINT UNSIGNED NOT NULL, -- FK
-                                  `base_amount_g` DECIMAL(8,3) NOT NULL, -- SERVING_SIZE에서 숫자만 파싱한 값
-                                  `kcal` DECIMAL(8,3) DEFAULT NULL,-- AMT_NUM1 : 열량
-                                  `carbohydrate` DECIMAL(8,3) DEFAULT NULL, -- AMT_NUM6 : 탄수화물
-                                  `protein` DECIMAL(8,3) DEFAULT NULL, -- AMT_NUM3 : 단백질
-                                  `fat` DECIMAL(8,3) DEFAULT NULL, -- AMT_NUM4 : 지방
-                                  `sugar` DECIMAL(8,3) DEFAULT NULL, -- AMT_NUM7 : 당류
-                                  `sodium` DECIMAL(10,3) DEFAULT NULL, -- AMT_NUM13 : 나트륨
-                                  `dietary_fiber` DECIMAL(8,3) DEFAULT NULL, -- AMT_NUM8 : 식이섬유
-                                  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                                  PRIMARY KEY (`id`),
-                                  KEY `idx_meal_nutrition_meal_id` (`meal_id`),
-                                  CONSTRAINT `fk_meal_nutrition_meal`
-                                      FOREIGN KEY (`meal_id`) REFERENCES `meal`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE `training_video_like` (
+                                       `user_id` BIGINT UNSIGNED NOT NULL,
+                                       `video_id` BIGINT UNSIGNED NOT NULL,
+                                       `created_at` DATETIME NOT NULL,
+                                       PRIMARY KEY (`user_id`, `video_id`),
+                                       CONSTRAINT `fk_training_video_like_user`
+                                           FOREIGN KEY (`user_id`) REFERENCES `user`(`id`),
+                                       CONSTRAINT `fk_training_video_like_video`
+                                           FOREIGN KEY (`video_id`) REFERENCES `training_video`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
-######################### 커뮤니티 #########################
+CREATE TABLE `training_youtube_source` (
+                                           `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                                           `source_type` VARCHAR(20) NOT NULL,
+                                           `source_value` VARCHAR(255) NOT NULL,
+                                           `main_category` VARCHAR(50) NOT NULL,
+                                           `level` VARCHAR(20) NULL,
+                                           `max_results` INT NOT NULL DEFAULT 20,
+                                           `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+                                           `created_at` DATETIME NOT NULL,
+                                           `updated_at` DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- 커뮤니티 게시글
-DROP TABLE IF EXISTS `community_post`;
+INSERT INTO training_youtube_source(source_type, source_value, main_category, level, max_results, is_active, created_at, updated_at)
+VALUES
+    ('KEYWORD', '전신운동 15분', 'HOME', 'BEGINNER', 20, 1, NOW(), NOW()),
+    ('KEYWORD', '요가 스트레칭 10분', 'YOGA', 'BEGINNER', 20, 1, NOW(), NOW()),
+    ('KEYWORD', '필라테스 core workout', 'PILATES', 'ALL', 20, 1, NOW(), NOW());
+
+CREATE TABLE `training_video_history` (
+                                          `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                                          `user_id` BIGINT UNSIGNED NOT NULL,
+                                          `video_id` BIGINT UNSIGNED NOT NULL,
+                                          `activity_date` DATE NOT NULL,
+                                          `completed` TINYINT(1) NOT NULL DEFAULT 1,
+                                          `duration_sec` INT NULL,
+                                          `memo` VARCHAR(255) NULL,
+                                          `created_at` DATETIME NOT NULL,
+                                          `updated_at` DATETIME NOT NULL,
+                                          CONSTRAINT `fk_tv_history_user`
+                                              FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
+                                          CONSTRAINT `fk_tv_history_video`
+                                              FOREIGN KEY (`video_id`) REFERENCES `training_video`(`id`) ON DELETE CASCADE,
+                                          CONSTRAINT `uq_tv_history_user_video_date`
+                                              UNIQUE (`user_id`, `video_id`, `activity_date`)
+) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE `training_video_comment` (
+                                          `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                                          `video_id` BIGINT UNSIGNED NOT NULL,
+                                          `user_id` BIGINT UNSIGNED NOT NULL,
+                                          `content` VARCHAR(500) NOT NULL,
+                                          `created_at` DATETIME NOT NULL,
+                                          `updated_at` DATETIME NOT NULL,
+                                          `deleted_at` DATETIME NULL,
+                                          CONSTRAINT `fk_tvc_video`
+                                              FOREIGN KEY (`video_id`) REFERENCES `training_video`(`id`) ON DELETE CASCADE,
+                                          CONSTRAINT `fk_tvc_user`
+                                              FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+
+/* =========================================================
+   2-6. COMMUNITY
+========================================================= */
+
 CREATE TABLE `community_post` (
                                   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
                                   `user_id` BIGINT UNSIGNED NOT NULL,
@@ -257,8 +390,6 @@ CREATE TABLE `community_post` (
                                       FOREIGN KEY (`user_id`) REFERENCES `user`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 커뮤니티 식단 조인 테이블
-DROP TABLE IF EXISTS `community_post_diet`;
 CREATE TABLE `community_post_diet` (
                                        `post_id` BIGINT UNSIGNED NOT NULL,
                                        `diet_id` BIGINT UNSIGNED NOT NULL,
@@ -270,8 +401,6 @@ CREATE TABLE `community_post_diet` (
                                            FOREIGN KEY (`diet_id`) REFERENCES `diet`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 커뮤니티 운동 조인 테이블
-DROP TABLE IF EXISTS `community_post_video`;
 CREATE TABLE `community_post_video` (
                                         `post_id` BIGINT UNSIGNED NOT NULL,
                                         `video_id` BIGINT UNSIGNED NOT NULL,
@@ -283,11 +412,9 @@ CREATE TABLE `community_post_video` (
                                             FOREIGN KEY (`video_id`) REFERENCES `training_video`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 태그
-DROP TABLE IF EXISTS `community_tag`;
 CREATE TABLE `community_tag` (
                                  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-                                 `name` VARCHAR(50) NOT NULL, -- '#헬스' 말고 '헬스'만 ( 백에서 정규화 해줄 예정 )
+                                 `name` VARCHAR(50) NOT NULL,
                                  `usage_count` INT UNSIGNED NOT NULL DEFAULT 0,
                                  `created_at` DATETIME NOT NULL,
                                  `updated_at` DATETIME NOT NULL,
@@ -295,8 +422,6 @@ CREATE TABLE `community_tag` (
                                  UNIQUE KEY `uk_tag_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- 태그, 게시글 조인테이블
-DROP TABLE IF EXISTS `community_post_tag`;
 CREATE TABLE `community_post_tag` (
                                       `post_id` BIGINT UNSIGNED NOT NULL,
                                       `tag_id`  BIGINT UNSIGNED NOT NULL,
@@ -308,8 +433,6 @@ CREATE TABLE `community_post_tag` (
                                           FOREIGN KEY (`tag_id`) REFERENCES `community_tag`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- 좋아요
-DROP TABLE IF EXISTS `community_post_like`;
 CREATE TABLE `community_post_like` (
                                        `post_id` BIGINT UNSIGNED NOT NULL,
                                        `user_id` BIGINT UNSIGNED NOT NULL,
@@ -322,8 +445,6 @@ CREATE TABLE `community_post_like` (
                                            FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- 댓글
-DROP TABLE IF EXISTS `community_comment`;
 CREATE TABLE `community_comment` (
                                      `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
                                      `post_id` BIGINT UNSIGNED NOT NULL,
@@ -343,154 +464,53 @@ CREATE TABLE `community_comment` (
                                          FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
-######################### 운동영상 #########################
 
-DROP TABLE IF EXISTS `training_video`;
-CREATE TABLE `training_video` (
-                                  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                                  `youtube_video_id` VARCHAR(50) NOT NULL,
-                                  `title` VARCHAR(200) NOT NULL,
-                                  `description` TEXT NULL,
-                                  `thumbnail_url` VARCHAR(255) NOT NULL,
-                                  `duration_sec` INT NOT NULL,
-                                  `main_category` VARCHAR(50) NOT NULL, -- YOGA, PILATES, etc
-                                  `level` VARCHAR(20) NULL, -- BEGINNER, INTERMEDIATE, etc
-                                  `tags` VARCHAR(255) NULL,
-    -- 앱 내부 수치
-                                  `view_count` BIGINT NOT NULL DEFAULT 0,
-                                  `like_count` BIGINT NOT NULL DEFAULT 0,
-    -- 유튜브 통계
-                                  `youtube_view_cnt` BIGINT NULL,
-                                  `youtube_like_cnt` BIGINT NULL,
-                                  `published_at` DATETIME NULL,
-                                  `is_recommended` TINYINT(1) NOT NULL DEFAULT 0,
-                                  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
-                                  `channel_title` VARCHAR(200) NULL,
-                                  `created_at` DATETIME NOT NULL,
-                                  `updated_at` DATETIME NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+/* =========================================================
+   2-7. DASHBOARD / AI LOG
+========================================================= */
 
-
-DROP TABLE IF EXISTS `training_video_like`;
-CREATE TABLE `training_video_like` (
-                                       `user_id` BIGINT UNSIGNED NOT NULL,
-                                       `video_id` BIGINT UNSIGNED NOT NULL,
-                                       `created_at` DATETIME NOT NULL,
-                                       PRIMARY KEY (`user_id`, `video_id`),
-                                       CONSTRAINT `fk_training_video_like_user`
-                                           FOREIGN KEY (`user_id`) REFERENCES `user`(`id`),
-                                       CONSTRAINT `fk_training_video_like_video`
-                                           FOREIGN KEY (`video_id`) REFERENCES `training_video`(`id`)
-) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-
-DROP TABLE IF EXISTS `training_youtube_source`;
-CREATE TABLE `training_youtube_source` (
-                                           `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                                           `source_type` VARCHAR(20) NOT NULL, -- KEYWORD / PLAYLIST
-                                           `source_value` VARCHAR(255) NOT NULL, -- 검색어 or PlaylistId
-                                           `main_category` VARCHAR(50) NOT NULL, -- YOGA / PILATES / HOME ...
-                                           `level` VARCHAR(20) NULL, -- BEGINNER / INTERMEDIATE / ADVANCED
-                                           `max_results` INT NOT NULL DEFAULT 20,
-                                           `is_active` TINYINT(1) NOT NULL DEFAULT 1,
-                                           `created_at` DATETIME NOT NULL,
-                                           `updated_at` DATETIME NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-
-INSERT INTO training_youtube_source(source_type, source_value, main_category, level, max_results, is_active, created_at, updated_at)
-VALUES
-    ('KEYWORD', '전신운동 15분', 'HOME', 'BEGINNER', 20, 1, NOW(), NOW()),
-    ('KEYWORD', '요가 스트레칭 10분', 'YOGA', 'BEGINNER', 20, 1, NOW(), NOW()),
-    ('KEYWORD', '필라테스 core workout', 'PILATES', 'ALL', 20, 1, NOW(), NOW());
-
-DROP TABLE IF EXISTS `training_video_history`;
-CREATE TABLE `training_video_history` (
-                                          `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                                          `user_id` BIGINT UNSIGNED NOT NULL,
-                                          `video_id` BIGINT UNSIGNED NOT NULL,
-                                          `activity_date` DATE NOT NULL, -- YYYY-MM-DD
-                                          `completed` TINYINT(1) NOT NULL DEFAULT 1,
-                                          `duration_sec` INT NULL,
-                                          `memo` VARCHAR(255) NULL,
-                                          `created_at` DATETIME NOT NULL,
-                                          `updated_at` DATETIME NOT NULL,
-                                          CONSTRAINT `fk_tv_history_user`
-                                              FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
-                                          CONSTRAINT `fk_tv_history_video`
-                                              FOREIGN KEY (`video_id`) REFERENCES `training_video`(`id`) ON DELETE CASCADE,
-                                          CONSTRAINT `uq_tv_history_user_video_date`
-                                              UNIQUE (`user_id`, `video_id`, `activity_date`)
-) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-
--- 운동 영상 댓글
-DROP TABLE IF EXISTS `training_video_comment`;
-CREATE TABLE `training_video_comment` (
-                                          `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                                          `video_id` BIGINT UNSIGNED NOT NULL,
-                                          `user_id` BIGINT UNSIGNED NOT NULL,
-                                          `content` VARCHAR(500) NOT NULL,
-                                          `created_at` DATETIME NOT NULL,
-                                          `updated_at` DATETIME NOT NULL,
-                                          `deleted_at` DATETIME NULL,
-                                          CONSTRAINT `fk_tvc_video`
-                                              FOREIGN KEY (`video_id`) REFERENCES `training_video`(`id`) ON DELETE CASCADE,
-                                          CONSTRAINT `fk_tvc_user`
-                                              FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
-
-######################### 대시보드 #########################
-
--- 유저 별 일자별 섭취 영양 요약
-DROP TABLE IF EXISTS `user_daily_nutrition`;
 CREATE TABLE `user_daily_nutrition` (
-                                        `user_id` BIGINT UNSIGNED NOT NULL, -- user.id
-                                        `date` DATE NOT NULL, -- 기준 날짜 (YYYY-MM-DD)
+                                        `user_id` BIGINT UNSIGNED NOT NULL,
+                                        `date` DATE NOT NULL,
                                         `total_kcal` DECIMAL(10,3) NOT NULL DEFAULT 0,
                                         `total_carbohydrate` DECIMAL(10,3) NOT NULL DEFAULT 0,
                                         `total_protein` DECIMAL(10,3) NOT NULL DEFAULT 0,
                                         `total_fat` DECIMAL(10,3) NOT NULL DEFAULT 0,
                                         `total_sugar` DECIMAL(10,3) NOT NULL DEFAULT 0,
                                         `total_sodium` DECIMAL(12,3) NOT NULL DEFAULT 0,
-                                        `diet_score_avg` INT NULL, -- 해당 날짜 식단 점수 평균 (옵션)
-                                        `diet_score_sum` INT NULL, -- 점수 합 (옵션)
-                                        `meal_count` INT NOT NULL DEFAULT 0, -- 등록된 식단 건수
+                                        `diet_score_avg` INT NULL,
+                                        `diet_score_sum` INT NULL,
+                                        `meal_count` INT NOT NULL DEFAULT 0,
                                         `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                         `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                                         PRIMARY KEY (`user_id`, `date`),
                                         CONSTRAINT `fk_udn_user`
-                                            FOREIGN KEY (`user_id`) REFERENCES `user`(`id`)
-                                                ON DELETE CASCADE
+                                            FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- 유저 별 식단 스트릭
-DROP TABLE IF EXISTS `user_daily_activity`;
 CREATE TABLE `user_daily_activity` (
-                                       `user_id` BIGINT UNSIGNED NOT NULL, -- user.id
-                                       `date` DATE NOT NULL, -- YYYY-MM-DD (기준 날짜)
-                                       `diet_logged` TINYINT(1) NOT NULL DEFAULT 0, -- 식단 기록 여부
-                                       `workout_logged` TINYINT(1) NOT NULL DEFAULT 0, -- 운동 기록 여부
-                                       `challenge_done` TINYINT(1) NOT NULL DEFAULT 0, -- 챌린지 완료 여부
+                                       `user_id` BIGINT UNSIGNED NOT NULL,
+                                       `date` DATE NOT NULL,
+                                       `diet_logged` TINYINT(1) NOT NULL DEFAULT 0,
+                                       `workout_logged` TINYINT(1) NOT NULL DEFAULT 0,
+                                       `challenge_done` TINYINT(1) NOT NULL DEFAULT 0,
                                        `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                        `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                                        PRIMARY KEY (`user_id`, `date`),
                                        CONSTRAINT `fk_uda_user`
-                                           FOREIGN KEY (`user_id`) REFERENCES `user`(`id`)
-                                               ON DELETE CASCADE
+                                           FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
--- AI 식단 분석
-DROP TABLE IF EXISTS `diet_ai_weekly_analysis_log`;
 CREATE TABLE `diet_ai_weekly_analysis_log` (
                                                `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
                                                `user_id` BIGINT UNSIGNED NOT NULL,
                                                `start_date` DATE NOT NULL,
                                                `end_date` DATE NOT NULL,
-    -- 요청/응답 저장
                                                `request_system_prompt` TEXT NOT NULL,
                                                `request_user_prompt` TEXT NOT NULL,
                                                `response_json` JSON NULL,
-    -- 결과 요약(빠른 조회용)
                                                `weekly_score` INT NULL,
-                                               `status` VARCHAR(20) NOT NULL, -- SUCCESS / FALLBACK / FAIL
+                                               `status` VARCHAR(20) NOT NULL,
                                                `error_message` VARCHAR(1000) NULL,
                                                `created_at` DATETIME NOT NULL,
                                                `updated_at` DATETIME NOT NULL,
@@ -498,4 +518,12 @@ CREATE TABLE `diet_ai_weekly_analysis_log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
+/* =========================================================
+   2-8. SEED HISTORY
+========================================================= */
 
+CREATE TABLE IF NOT EXISTS seed_history (
+                                            `name` VARCHAR(50) NOT NULL,
+                                            `executed_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                            PRIMARY KEY (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -30,34 +30,23 @@
     <!-- INSERT -->
     <insert id="insert" parameterType="com.ssafy.fitmeet.domain.diet.entity.Diet" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO diet (
-            user_id,
-            `date`,
-            meal_type,
-            description,
-            image_url,
-            source_type,
-            total_kcal,
-            total_carbohydrate,
-            total_protein,
-            total_fat,
-            total_sugar,
-            total_sodium,
-            is_public
+        user_id, `date`, meal_type, description, image_url, source_type,
+        total_kcal, total_carbohydrate, total_protein, total_fat,
+        total_sugar, total_sodium, is_public,
+        created_at, updated_at
         ) VALUES (
-                     #{userId},
-                     #{date},
-                     #{mealType},
-                     #{description},
-                     #{imageUrl},
-                     #{sourceType},
-                     #{totalKcal},
-                     #{totalCarbohydrate},
-                     #{totalProtein},
-                     #{totalFat},
-                     #{totalSugar},
-                     #{totalSodium},
-                     #{isPublic}
-                 )
+        #{userId}, #{date}, #{mealType}, #{description}, #{imageUrl}, #{sourceType},
+        #{totalKcal}, #{totalCarbohydrate}, #{totalProtein}, #{totalFat},
+        #{totalSugar}, #{totalSodium}, #{isPublic},
+        <choose>
+            <when test="createdAt != null">#{createdAt}</when>
+            <otherwise>NOW()</otherwise>
+        </choose>,
+        <choose>
+            <when test="updatedAt != null">#{updatedAt}</when>
+            <otherwise>NOW()</otherwise>
+        </choose>
+        )
     </insert>
 
     <!-- 단건 조회 -->

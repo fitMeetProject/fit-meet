@@ -182,4 +182,8 @@
         LIMIT 100
     </select>
 
+    <select id="findAllIds" resultType="long">
+        SELECT id FROM meal
+    </select>
+
 </mapper>

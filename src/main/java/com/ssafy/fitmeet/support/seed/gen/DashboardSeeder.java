@@ -10,17 +10,15 @@ import com.ssafy.fitmeet.domain.user.entity.UserBodyInfo;
 import com.ssafy.fitmeet.domain.user.entity.UserDailyActivity;
 import lombok.RequiredArgsConstructor;
 import net.datafaker.Faker;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.List;
 
 @Component
-@Profile({"local","dev"})
 @RequiredArgsConstructor
 public class DashboardSeeder {
 

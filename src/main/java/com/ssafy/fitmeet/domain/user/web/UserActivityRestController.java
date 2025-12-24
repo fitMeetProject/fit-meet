@@ -30,7 +30,7 @@ public class UserActivityRestController {
      * 현재 식단 스트릭 정보
      */
     @GetMapping("/diet/streak")
-    @Operation(summary = "스트릭 정보", description = "오늘부터 뒤로 연속해서 dietLogged = true 인 날의 수 ( 30일 기준 )")
+    @Operation(summary = "스트릭 정보", description = "오늘부터 뒤로 연속해서 dietLogged = true 인 날의 수 ( 100일 기준 )")
     public ResponseEntity<Response<DietStreakInfo>> getDietStreak(@AuthenticationPrincipal CustomUserDetails userDetails) {
         Long userId = userDetails.getId();
 

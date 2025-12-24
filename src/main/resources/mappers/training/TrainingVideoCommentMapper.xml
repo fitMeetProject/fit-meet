@@ -33,7 +33,15 @@
         INSERT INTO training_video_comment (
         video_id, user_id, content, created_at, updated_at
         ) VALUES (
-        #{videoId}, #{userId}, #{content}, NOW(), NOW()
+        #{videoId}, #{userId}, #{content},
+        <choose>
+            <when test="createdAt != null">#{createdAt}</when>
+            <otherwise>NOW()</otherwise>
+        </choose>,
+        <choose>
+            <when test="updatedAt != null">#{updatedAt}</when>
+            <otherwise>NOW()</otherwise>
+        </choose>
         )
     </insert>
 

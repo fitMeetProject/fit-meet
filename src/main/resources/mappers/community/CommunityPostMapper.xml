@@ -26,17 +26,27 @@
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="com.ssafy.fitmeet.domain.community.entity.CommunityPost">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.ssafy.fitmeet.domain.community.entity.CommunityPost">
         INSERT INTO community_post
         (user_id, title, content, category, post_image_url,
         activity_date, share_diet, share_streak, share_workout,
         diet_note, workout_note,
-        like_count, view_count, comment_count, is_deleted)
+        like_count, view_count, comment_count, is_deleted,
+        created_at, updated_at)
         VALUES
         (#{userId}, #{title}, #{content}, #{category}, #{postImageUrl},
         #{activityDate}, #{shareDiet}, #{shareStreak}, #{shareWorkout},
         #{dietNote}, #{workoutNote},
-        #{likeCount}, #{viewCount}, #{commentCount}, #{isDeleted})
+        #{likeCount}, #{viewCount}, #{commentCount}, #{isDeleted},
+        <choose>
+            <when test="createdAt != null">#{createdAt}</when>
+            <otherwise>NOW()</otherwise>
+        </choose>,
+        <choose>
+            <when test="updatedAt != null">#{updatedAt}</when>
+            <otherwise>NOW()</otherwise>
+        </choose>)
     </insert>
 
     <select id="findById" resultMap="CommunityPostMap">
@@ -55,17 +65,20 @@
         share_streak = #{shareStreak},
         share_workout = #{shareWorkout},
         diet_note = #{dietNote},
-        workout_note = #{workoutNote}
-        <if test="postImageUrl != null">
-            ,post_image_url = #{postImageUrl}
-        </if>
+        workout_note = #{workoutNote},
+        updated_at =
+        <choose>
+            <when test="updatedAt != null">#{updatedAt}</when>
+            <otherwise>NOW()</otherwise>
+        </choose>
         WHERE id = #{id}
         AND is_deleted = 0
     </update>
 
     <update id="updatePostImage">
         UPDATE community_post
-        SET post_image_url = #{postImageUrl}
+        SET post_image_url = #{postImageUrl},
+        updated_at = NOW()
         WHERE id = #{postId}
         AND is_deleted = 0
     </update>
@@ -73,7 +86,13 @@
     <update id="softDelete">
         UPDATE community_post
         SET is_deleted = 1,
-        deleted_at = NOW()
+        deleted_at =
+        <choose>
+            <!-- 엔티티에 deletedAt이 있다면 그걸 쓰고, 없으면 NOW() -->
+            <when test="deletedAt != null">#{deletedAt}</when>
+            <otherwise>NOW()</otherwise>
+        </choose>,
+        updated_at = NOW()
         WHERE id = #{postId}
         AND user_id = #{userId}
         AND is_deleted = 0
