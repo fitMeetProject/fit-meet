@@ -34,11 +34,11 @@ public interface CommunityPostDao {
 
     long countSearch(PostSearchCondition cond);
 
-    long countByUserId(@Param("userId") Long userId);
+    long countByUserId(@Param("isDeleted") int isDeleted, @Param("userId") Long userId);
 
     long countLikedPostsByUser(@Param("userId") Long userId);
 
-    List<CommunityPost> findByUserIdPaged(@Param("userId") Long userId, @Param("size") int size, @Param("offset") int offset);
+    List<CommunityPost> findByUserIdPaged(@Param("isDeleted") int isDeleted, @Param("userId") Long userId, @Param("size") int size, @Param("offset") int offset);
 
     List<CommunityPost> findLikedPostsByUserPaged(@Param("userId") Long userId, @Param("size") int size, @Param("offset") int offset);
 

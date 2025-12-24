@@ -501,14 +501,14 @@ public class CommunityServiceImpl implements CommunityService {
 
     @Override
     @Transactional(readOnly = true)
-    public PostPageResponse getMyPosts(Long userId, Integer page, Integer size) {
+    public PostPageResponse getMyPosts(Long userId, Integer page, Integer size, boolean isDeleted) {
 
         int p = normalizePage(page);
         int s = normalizeSize(size);
         int offset = p * s;
 
-        long totalElements = postDao.countByUserId(userId);
-        List<CommunityPost> posts = postDao.findByUserIdPaged(userId, s, offset);
+        long totalElements = postDao.countByUserId(isDeleted?1:0, userId);
+        List<CommunityPost> posts = postDao.findByUserIdPaged(isDeleted?1:0, userId, s, offset);
 
         List<PostSummaryResponse> content = new ArrayList<>();
         for (CommunityPost post : posts) {

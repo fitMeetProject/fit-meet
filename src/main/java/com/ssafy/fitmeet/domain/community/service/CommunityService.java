@@ -31,7 +31,7 @@ public interface CommunityService {
 
     PostPageResponse getMyLikedPosts(Long userId, Integer page, Integer size);
 
-    PostPageResponse getMyPosts(Long userId, Integer page, Integer size);
+    PostPageResponse getMyPosts(Long userId, Integer page, Integer size, boolean isDeleted);
 
     List<TagSummaryResponse> getTopTags(int limit);
 }

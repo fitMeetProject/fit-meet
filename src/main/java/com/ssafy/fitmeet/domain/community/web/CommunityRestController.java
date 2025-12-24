@@ -161,7 +161,21 @@ public class CommunityRestController {
               @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
               @RequestParam(value = "size", required = false, defaultValue = "20") Integer size) {
         Long userId = userDetails.getId();
-        PostPageResponse body = communityService.getMyPosts(userId, page, size);
+        PostPageResponse body = communityService.getMyPosts(userId, page, size, false);
+
+        return ResponseEntity.ok(ResponseUtil.ok(body));
+    }
+
+    /**
+     * 내가 등록한 게시글 목록
+     */
+    @GetMapping("/posts/me/deleted")
+    @Operation(summary = "내가 등록한 게시글 중 삭제된 목록", description = "현재 로그인한 사용자가 등록한 게시글 중 삭제된 목록 조회")
+    public ResponseEntity<Response<PostPageResponse>> getMyDeletePosts(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                                                 @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+                                                                 @RequestParam(value = "size", required = false, defaultValue = "20") Integer size) {
+        Long userId = userDetails.getId();
+        PostPageResponse body = communityService.getMyPosts(userId, page, size, true);
 
         return ResponseEntity.ok(ResponseUtil.ok(body));
     }

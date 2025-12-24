@@ -212,7 +212,7 @@ public class TrainingVideoServiceImpl implements TrainingVideoService {
         if (video == null) throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
 
         trainingVideoDao.increaseViewCount(videoId);
-        video = trainingVideoDao.findById(videoId);
+        video.setViewCount(video.getViewCount() + 1);
 
         boolean liked = trainingVideoDao.isLiked(userId, videoId) != null;
 

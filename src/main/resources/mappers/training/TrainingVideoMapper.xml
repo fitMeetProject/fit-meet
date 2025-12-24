@@ -186,4 +186,17 @@
         WHERE id = #{id}
     </update>
 
+    <update id="increaseViewCountBy">
+        UPDATE training_video
+        SET view_count = view_count + #{delta}
+        WHERE id = #{id}
+    </update>
+
+    <update id="setViewCount">
+        UPDATE training_video
+        SET view_count = #{value}
+        WHERE id = #{id}
+    </update>
+
+
 </mapper>

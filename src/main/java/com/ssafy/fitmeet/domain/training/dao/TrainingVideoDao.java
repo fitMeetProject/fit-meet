@@ -33,4 +33,9 @@ public interface TrainingVideoDao {
     Integer isLiked(@Param("userId") Long userId, @Param("videoId") Long videoId);
     int insertLike(@Param("userId") Long userId, @Param("videoId") Long videoId);
     int deleteLike(@Param("userId") Long userId, @Param("videoId") Long videoId);
+
+    // Seeding 용
+    int increaseViewCountBy(@Param("id") Long id, @Param("delta") long delta);
+    int setViewCount(@Param("id") Long id, @Param("value") long value);
+
 }
