@@ -217,4 +217,14 @@
         AND p.is_deleted = 0
     </select>
 
+    <update id="restore">
+        UPDATE community_post
+        SET is_deleted = 0,
+        deleted_at = NULL,
+        updated_at = NOW()
+        WHERE id = #{postId}
+        AND user_id = #{userId}
+        AND is_deleted = 1
+    </update>
+
 </mapper>
