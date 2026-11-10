@@ -79,3 +79,5 @@ h2-data/
 *.cache
 *.swp
 *.swo
+src/main/resources/application.yml
+bin/
